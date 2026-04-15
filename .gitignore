@@ -1,3 +1,5 @@
 *.wav
 /corpus/*/*.wav
 /corpus/*/output/*.wav
+/corpus/*/*.mp3
+/corpus/*/output/*.mp3
