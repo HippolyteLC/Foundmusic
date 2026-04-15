@@ -1,6 +1,10 @@
 import numpy as np
 import soundfile as sf
 
+
+# TODO: Add metadata saving from a render. Data might include: grain waveform, grain timestamps
+# grain size, etc. for each channel of the final output audio array.
+
 def async_gs(input_path, output_file_dir, data, grain_indices, 
              sr, cloud_duration, n_streams, 
              max_grain_density, rand_seed=None) -> None:
