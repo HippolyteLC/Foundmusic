@@ -1,2 +1,30 @@
 reference, link, why, notes
-"Roads, C., 2004. Microsound. The MIT Press.",https://dl.acm.org/doi/abs/10.5555/1213303,"One of the foundational books on granular synthesis, and all methods of manipulating microsounds. It provides general descriptions of the various methods the author but also others in the field have used. It details the general approach and parameterization of all of the proposed methods. ","Ch 3: details basic fundamentals of granular synthesis. Details different approaches to making granular clouds, as Roads calls them, which are time sequences where grains are either synchronously, or asynchronously arranged. There are alternative methods to the parameterizatoin of grains, pitch-synchronous, granulation (= grain waveforms from sampled sounds), and abstract and physical models for the composition and granular controls of gs. "
+"@book{roads2004microsound,
+  title={Microsound},
+  author={Roads, Curtis},
+  year={2004},
+  publisher={The MIT Press}
+}",https://dl.acm.org/doi/abs/10.5555/1213303,"One of the foundational books on granular synthesis, and all methods of manipulating microsounds. It provides general descriptions of the various methods the author but also others in the field have used. It details the general approach and parameterization of all of the proposed methods. ","Ch 3: details basic fundamentals of granular synthesis. Details different approaches to making granular clouds, as Roads calls them, which are time sequences where grains are either synchronously, or asynchronously arranged. There are alternative methods to the parameterizatoin of grains, pitch-synchronous, granulation (= grain waveforms from sampled sounds), and abstract and physical models for the composition and granular controls of gs. "
+"@book{xenakis1992formalized,
+  title={Formalized music: thought and mathematics in composition},
+  author={Xenakis, Iannis},
+  number={6},
+  year={1992},
+  publisher={Pendragon Press}
+}",https://dl.acm.org/doi/abs/10.5555/1213303,,
+"@book{muller2015fundamentals,
+  title={Fundamentals of music processing: Audio, analysis, algorithms, applications},
+  author={M{\""u}ller, Meinard},
+  volume={5},
+  year={2015},
+  publisher={Springer}
+}",https://doi.org/10.1007/978-3-319-21945-5,"Provides a general scope of music theory and processing. The main chapters of interest are chapters 1 & 2. It elaborates on representations of music, and","Notes Ch 1: Acoustic sound waves - audio. These are defined as the the oscillations in the air that are heard by the human ear. This is the actual sound and allows for complete reproduction of the sound. We can derive frequency, loudness, timbre, etc. from this representation form. Subjective perceptions of sound are researched in the field of psychoacoustics (see Psychoacoustics, Facts and Models., 2007).  
+
+Notes Ch 1.3.1 
+Frequency is simply put the repetition of cycles in the oscillations of an acoustic sound wave. The periods. The pitch is a heuristic, more ambiguous notion. In the twelve-tone-even-tempered-scale, we can take an A4 (440 Hz) as a pitch. Pitches have logarithmic frequency properties, human perception of pitch is logarithmic in nature. 
+The simplest soundwave is a sinusoid, which is the purest form of a pitch (pure tone/ harmonic sound). A partial is anyone of the sinusoids of which a musical tone might be comprised. The lowest partial (in frequency / pitch), is the fundamental frequency of a sound, a musical tone. All the higher partials, often harmonic when originating from some instrument; harmonics are integer multiples of the lowest partial. 
+
+*Inharmonicity would be more prominent in the types of field recordings I want to experiment with. It might be something to delve into. Certain percussive instruments are inherently more inharmonic. 
+Notes Ch 1.3.4 
+Timbre. The quality of sound which cannot be described by Pitch, Loudness, and Duration. Amplitude envelopes, distribution of energy across frequencies (i.e. the strength of certain partials as can be seen from spectrograms for instance), the inharmonicities of sound, the more mechanical properties of sounds, such as transients, all contribute to this property of sound which we call Timbre. Of the aspects discussed in this chapter, Timbre is the most ambiguous, subjective quality; it is difficult to isolate what exactly timbre is. 
+"
