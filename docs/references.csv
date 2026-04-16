@@ -61,3 +61,4 @@ tically controlled settings"
   publisher={AIP Publishing}
 }",https://doi.org/10.1121/1.3642604,"Geoffrey peeters has done a lot of work on Music Information Retrieval methods. This paper outlines the Timbre Toolbox, which contains traditional DSP methods for perceptual analysis of sound. ","The paper outlines several methods for describing signals using four representations of sound at the basis. The interesting ones that recur in a lot of the libraries that are used in my research use the STFT, time-series, and harmonic representations of sound to extract values that describe aspects of the sound. For instance, spectral flux, spectral kurtosis, log attack, these descriptors are detailed and their use explained. Though this paper originally provided its methods in MATLAB, many of the SOTA libraries in python have based their work or their methods on the traditional DSP descriptors elaborated on in this paper (e.g. Librosa)
 . "
+
