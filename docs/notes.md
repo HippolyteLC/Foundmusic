@@ -13,6 +13,7 @@ IMPORTANT: why have I chosen each method. Elaborate on motivation for all the ch
 - Introduction to algorithmic approach of producing music and also why we are doing this?
     - Chaotic system
     - Abstract models
+    - Markov/ stochastic models
 - Can we extract musicality, from sound not categorically recorded in a non acoustic environments, using different abstract models of granular synthesis? 
 
 
@@ -32,6 +33,8 @@ IMPORTANT: why have I chosen each method. Elaborate on motivation for all the ch
     - Define different relevant methods of gs
     - Define abstract and physical models of gs
     - What are the three algorithms, what is the previous implementation of these algorithms in music generation/ gs
+        - Markov chains: transition probability matrices (Xenaxis, Miranda)
+        
 - Background on grain analysis
 
 - Background on algorithms

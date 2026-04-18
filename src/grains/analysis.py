@@ -13,7 +13,7 @@ class AnalysisObject():
         self.sr = sr
         self.input = os.path.join(self.dir, "\\input.wav")
         self.y = None
-        self.len_input = self.len(self.y)
+        self.len_input = len(self.y) if self.y else None
 
     def load_soundfile(self):
         y, _ = af.read(self.input, self.sr)
