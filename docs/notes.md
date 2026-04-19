@@ -21,14 +21,18 @@ IMPORTANT: why have I chosen each method. Elaborate on motivation for all the ch
 - Evaluation: 
     - Workflow for creating music from field recordings to granular analysis, to granular synthesis. 
 
-# Background
+# Background 
 
 - Background on digital signal processing
-    - STFT
-    - Spectral analysis
+    - Frequency / Time representations of sound
+    - Spectral analysis of sound
+    - Explain spectral descriptors (refer to AudioFlux) library
+    - Spectral descriptors for grains (CataRT)
     - Slicing / Onset detection / other
-    - Grain selection
+    - Grain selection (Markov chain)
+
 - Background on granular synthesis 
+(Curtis Roads / )
     - Define granular parametres
     - Define different relevant methods of gs
     - Define abstract and physical models of gs
@@ -43,3 +47,6 @@ IMPORTANT: why have I chosen each method. Elaborate on motivation for all the ch
 
 # Methodology
 
+
+# Questions: 
+Q: since grain slicing/ selection is interwoven to a significant degree in a given algorithm, e.g. Markov chain of grains includes the selection. This depends on what granular parametres are handed off to the algorithm. It makes more sense to explore the workflow/ output of the three algorithms given three different types of grain analysis. Instead of having the workflow: 1) 3? grain slicing, 2) 3? grain selection, and 3) 3 grain synthesis, you would have 1) 1 grain slicing method, 2) 3 grain analysis representations: MFCC, Spectral descriptors, latent (RAVE Embedding for example), and 3) 3 algorithms that leverage the different analyses of the different representations. 
