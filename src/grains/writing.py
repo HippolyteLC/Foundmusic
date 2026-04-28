@@ -2,7 +2,7 @@ from datetime import datetime
 import hashlib
 import json
 import os
-import soundfile
+import soundfile as sf
 
 
 def get_parametre_hashing(param_dict, hash_length):
@@ -28,6 +28,8 @@ def save_output_data(output_data, sr, parametre_dict, output_dir):
     """
     write json metadata and output wav to folders
     """
+    for k,v in parametre_dict:
+        print(type(v))
     fp_wav, fp_json = get_output_id(parametre_dict)
     fp_metadata = os.path.join((output_dir + "\metadata"), fp_json)
     fp_output = os.path.join((output_dir + "\output"), fp_wav)

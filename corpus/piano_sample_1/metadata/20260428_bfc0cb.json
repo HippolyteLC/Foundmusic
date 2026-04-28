@@ -1,0 +1,33 @@
+{
+    "random_seed": 200,
+    "sample_rate": 48000,
+    "input_file": "..\\..\\corpus\\piano_sample_1\\input.wav",
+    "n_clusters": 3,
+    "densities": [
+        0,
+        1,
+        3,
+        9
+    ],
+    "grain_sizes": [
+        100,
+        200,
+        400
+    ],
+    "delta_t": 0.4,
+    "max_grains": 4,
+    "num_chans": 2,
+    "init_states_densities_sizes": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "init_states_grain_cluster": [
+        0,
+        0,
+        0,
+        0
+    ],
+    "project": "markov_gs"
+}
