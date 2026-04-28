@@ -12,5 +12,6 @@
 - Fixed length slicing, analysis of the whole input sound, hop_size corresponding to grain_size
 - Clustering kmeans based on rms/ centroid distance
 - Transition probability matrix used for clusters, then uniform random sampling from each cluster
-
+- Added Xenaxis inspired screen method. Each screen contains a max number of grains, each of these grains has its own transition matrices. The first for the grain waveform selection, the second, for the grain density and size parametres. Using a multinomial PMF using a quasi-poisson approach. 
+- Added parametre saving and hashing of outputs (wav) and outputs (json). 
 

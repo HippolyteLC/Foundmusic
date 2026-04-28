@@ -3,3 +3,5 @@
 /corpus/*/output/*.wav
 /corpus/*/*.mp3
 /corpus/*/output/*.mp3
+/audio_demo/*.wav
+/audio_demo/*.mp3

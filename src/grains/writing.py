@@ -3,17 +3,25 @@ import hashlib
 import json
 import os
 import soundfile as sf
+import numpy as np
 
+def numpy_filler(obj):
+    if isinstance(obj, (np.int64, np.int32, np.int16)):
+        return int(obj)
+    if isinstance(obj, (np.float64, np.float32)):
+        return float(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
 
 def get_parametre_hashing(param_dict, hash_length):
     """
     get hash based on synthesis params
     """
-    param_string = json.dumps(param_dict, sort_keys=True)
+    param_string = json.dumps(param_dict, default=numpy_filler, sort_keys=True)
     hash_object = hashlib.sha256(param_string.encode())
     full_hash = hash_object.hexdigest()
     return full_hash[:hash_length]
-
     
 def get_output_id(paramdict, hash_length=6):
     """
@@ -28,12 +36,12 @@ def save_output_data(output_data, sr, parametre_dict, output_dir):
     """
     write json metadata and output wav to folders
     """
-    for k,v in parametre_dict:
-        print(type(v))
     fp_wav, fp_json = get_output_id(parametre_dict)
     fp_metadata = os.path.join((output_dir + "\metadata"), fp_json)
     fp_output = os.path.join((output_dir + "\output"), fp_wav)
     with open(fp_metadata, "w") as f:
         json.dump(parametre_dict, f, indent=4)
     sf.write(fp_output, output_data, sr)
-    
+
+
+
