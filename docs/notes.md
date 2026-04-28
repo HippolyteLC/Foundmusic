@@ -60,7 +60,15 @@ Markov theory
 informatoin sou
 A Markov process or chain constitutes a chain of events by which the next state or event is determined only by the current state=Markov Property. Higher order Markov chains look back a higher number of states to determine the next state. A Markov process 
 Some defs: 
-A state j is accessible i -> j if pn_ij > 0 for some n (where n is the number of steps). We assume every state is accessible from itself (p0: 0 steps, p0_ii = 1). Two states can communicate if they can access one another. 
+A state j is accessible i -> j if pn_ij > 0 for some n (where n is the number of steps). We assume every state is accessible from itself (p0: 0 steps, p0_ii = 1). Two states can communicate if they can access one another. These communicating states can be partitioned into communicating classes. A Markov chain is irreducible if all states can communicate with one another. A state is recurrent if pn_ii = 1, transient if < 1. A Markov chain is aperiodic if all its states are aperiodic. 
+
+In discrete-time Markov chains the time spent in one state is one time unit (1) if a state has no self-transition. It is a geometric random variable otherwise, defined as geometric(1-p_ii). 
+In continuous-time Markov chains the time spent in each state is a continuous random variable. 
+
+Xenaxis Markovian Stochastic Music
+1) he outlines different matrical representations of transition probabilities, denoted by two parametres for each grain parametre. I.e., for a state f0, there are two MTPs by which the transition of f0 to f1, ..., fn is determined. Which of the different MTPs is chosen depends on a grain parametre couple defined previously. 
+Xenaxis mentions perturbations to the transition matrix, these perturbations ensure the sound eventually reaches an equilibrium. 
+Brief explanation, he creates a coupling of parametre states to other parametre probability matrices, this way, 
 
 
 # Methodology
@@ -72,4 +80,7 @@ Q: since grain slicing/ selection is interwoven to a significant degree in a giv
 Q: RQ - Can markov chains propose a viable algorithmic method to granular synthesis? 
 
 Meeting 21 april notes:
-- 
+- ##
+
+Meeting 28 april notes:
+- byte tracking (RoboFlow, already implemented)
