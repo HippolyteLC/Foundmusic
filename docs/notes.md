@@ -16,10 +16,10 @@ IMPORTANT: why have I chosen each method. Elaborate on motivation for all the ch
     - Markov/ stochastic models
 - Can we extract musicality, from sound not categorically recorded in a non acoustic environments, using different abstract models of granular synthesis? 
 
-
-
 - Evaluation: 
     - Workflow for creating music from field recordings to granular analysis, to granular synthesis. 
+
+Synthesizer plug-ins and sample libraries are the main sources of sounds beside recording that exist to computer musicians. Recording audio in an acoustic setting is not accessible to everyone. Field recordings are recordings of audio that are not recorded in an acoustic settings; the content of a field recording can be of any sound: wind, rain, birds, a piano in a station, a phone-recorded acapella, the list goes on. Field recordings are accessible to nearly everyone. Often, the tendency is to use field recordings as  background ambient noise to define the setting or mood of a song (ref Olafur Arnalds), however, field recordings, due to their inherent lacking audio quality when compared to studio-recorded or synthetically produced sounds, are often more difficult to work with as main component of a digital music composition. There has been recent research into various ways in which input audio can be used to synthesize novel sounds. Neural latent spaces of sounds where any point in the latent space can be reconstructed into a sound is an example (irish paper/ neural GS paper/ IRCAM papers). Another example is by engel et al. that managed to output a real-time DDSP framework. However, neural methods of sound generation with sample inputs are limited in two main ways: first, outputs are biased to their training data which limits the novelty of the scope of sound generation, and second, the linkage of a sample input to synthesis parametres as in a DDSP framework loses out on much of the information that is available in a more lengthy field recording (e.g. a 1 minute recording of a metro station that is converted to parametres for a synthesis module loses out on much of the nuance of information from the original input). Methods that use the original input data in their output can avoid these two problems. T
 
 # Background 
 
