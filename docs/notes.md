@@ -1,4 +1,6 @@
 # Description thesis
+Can stochastic models of granular synthesis produce viable 
+
 
 # Bullet points on Introduction
 IMPORTANT: why have I chosen each method. Elaborate on motivation for all the choices made. 
@@ -19,7 +21,9 @@ IMPORTANT: why have I chosen each method. Elaborate on motivation for all the ch
 - Evaluation: 
     - Workflow for creating music from field recordings to granular analysis, to granular synthesis. 
 
-Synthesizer plug-ins and sample libraries are the main sources of sounds beside recording that exist to computer musicians. Recording audio in an acoustic setting is not accessible to everyone. Field recordings are recordings of audio that are not recorded in an acoustic settings; the content of a field recording can be of any sound: wind, rain, birds, a piano in a station, a phone-recorded acapella, the list goes on. Field recordings are accessible to nearly everyone. Often, the tendency is to use field recordings as  background ambient noise to define the setting or mood of a song (ref Olafur Arnalds), however, field recordings, due to their inherent lacking audio quality when compared to studio-recorded or synthetically produced sounds, are often more difficult to work with as main component of a digital music composition. There has been recent research into various ways in which input audio can be used to synthesize novel sounds. Neural latent spaces of sounds where any point in the latent space can be reconstructed into a sound is an example (irish paper/ neural GS paper/ IRCAM papers). Another example is by engel et al. that managed to output a real-time DDSP framework. However, neural methods of sound generation with sample inputs are limited in two main ways: first, outputs are biased to their training data which limits the novelty of the scope of sound generation, and second, the linkage of a sample input to synthesis parametres as in a DDSP framework loses out on much of the information that is available in a more lengthy field recording (e.g. a 1 minute recording of a metro station that is converted to parametres for a synthesis module loses out on much of the nuance of information from the original input). Methods that use the original input data in their output can avoid these two problems. T
+Synthesizer plug-ins and sample libraries are the main sources of sounds beside recording that exist to computer musicians. Recording audio in an acoustic setting is not accessible to everyone. Field recordings are recordings of audio that are not recorded in an acoustic settings; the content of a field recording can be of any sound: wind, rain, birds, a piano in a station, a phone-recorded acapella, the list goes on. Field recordings are accessible to nearly everyone. In computer music production field recordings are often used as background ambient noise and not the centrepiece of a song (ref Olafur Arnalds). As field recordings are often longer, they also comprise various sound events. It is then more difficult to extract the totality of the sound character from a lengthy field recording in a song, when it is not simply used as background ambient noise. 
+There has been recent research into various ways in which input audio, such as textural ambient sounds, is encoded into a latent space, and the latent space can be decoded from, allowing for smoother and potentially novel (re)synthesis of sounds. There has also been research into using sampled sounds and large corpora of sounds for musical sound synthesis: concatenative synthesis (the concat, CataRT, Neural GS). Neural latent spaces of sounds where any point in the latent space can be reconstructed into a sound is an example (irish paper/ neural GS paper/ IRCAM papers). Another example is by engel et al. that managed to output a real-time DDSP framework. However, neural methods of sound generation with sample inputs are limited in two main ways: first, outputs are biased to their training data which limits the novelty of the scope of sound generation, and second, the linkage of a sample input to synthesis parametres as in a DDSP framework loses out on much of the information that is available in a more lengthy field recording (e.g. a 1 minute recording of a metro station that is converted to parametres for a synthesis module loses out on much of the nuance of information from the original input). Methods that use the original input data in their output avoid the abstractness problem. The novelty issue is solved dependent of the parametres of such methods. An example of such a method is granular synthesis: the arranging of microsounds, either sampled from an input sound, or granulation as in Microsound (2001, Roads), or from a generated waveform, e.g. a simple sinusoid of a certain frequency, phase, amplitude. One branch of models of granular synthesis is algorithmic modelling of the synthesis parametres. Xenaxis proposed a markovian stochastic approach to modelling grains of sounds and their parametres in a time sequence in his book Formalized Music as an attempt to provide an alternative approach to serial music composition. The stochastic algorithmic approach leverages sampling grains and their parametres from probability distributions and resolves the complexity issue of controlling parametres for many grains. Depending on the probability distributions and its parametres, such as the average rate lambda in a poisson distribution, it should take longer before a time sequence composed by such an algorithm becomes ergodic, stable. The stochastic models allow us to create novel time sequences of grains. 
+This paper proposes an approach in python to algorithmic music which leverages the characteristics of field recordings to be musical centrepieces. 
 
 # Background 
 
@@ -73,14 +77,22 @@ Brief explanation, he creates a coupling of parametre states to other parametre 
 
 # Methodology
 
+- Design science: 
+    - Keep track and log production process
+    - Note moments of creative production - link to some output
+    - Document failures
+    - 
 
-# Questions: 
+
+# Questions 
 Q: since grain slicing/ selection is interwoven to a significant degree in a given algorithm, e.g. Markov chain of grains includes the selection. This depends on what granular parametres are handed off to the algorithm. It makes more sense to explore the workflow/ output of the three algorithms given three different types of grain analysis. Instead of having the workflow: 1) 3? grain slicing, 2) 3? grain selection, and 3) 3 grain synthesis, you would have 1) 1 grain slicing method, 2) 3 grain analysis representations: MFCC, Spectral descriptors, latent (RAVE Embedding for example), and 3) 3 algorithms that leverage the different analyses of the different representations. 
 
 Q: RQ - Can markov chains propose a viable algorithmic method to granular synthesis? 
 
 Meeting 21 april notes:
-- ##
 
 Meeting 28 april notes:
 - byte tracking (RoboFlow, already implemented)
+
+# Ideas
+1. use descriptor values in grain parametre setting/ probability distribution coupling.
