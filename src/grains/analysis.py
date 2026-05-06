@@ -4,22 +4,31 @@ import audioflux as af
 from audioflux.type import SpectralDataType, SpectralFilterBankScaleType
 import matplotlib.pyplot as plt
 import sklearn
+import librosa
 
-
+def get_spectrogram(data, y_axis, x_axis, sr, title=None):
+    D = librosa.amplitude_to_db(np.abs(librosa.stft(data)), ref=np.max)
+    fig, ax = plt.subplots()
+    img = librosa.display.specshow(data=D,y_axis=y_axis, x_axis=x_axis, sr=sr, ax=ax)
+    ax.set(title='Linear-frequency power spectrogram')
+    ax.label_outer()
+    fig.colorbar(img, ax=ax, format="%+2.f dB")
 
 class AnalysisObject():
     def __init__(self, dir, sr):
         self.dir = dir
         self.sr = sr
-        self.input = os.path.join(self.dir, "\\input.wav")
-        self.y = None
-        self.len_input = len(self.y) if self.y else None
+        self.input = os.path.normpath(self.dir + "\\input.wav")
+        self.data = None
+
+    def exists(self):
+        return os.path.exists(self.input)
 
     def load_soundfile(self):
         print(self.input)
-        y, _ = af.read(self.input, self.sr)
-        self.len_input = len(y)
-        self.y = y
+        if os.path.exists(self.input):
+            y, _ = af.read(path=self.input, samplate=self.sr)
+            self.data = y
     
     def define_grains(self, grain_duration):
         """
@@ -29,7 +38,7 @@ class AnalysisObject():
         grain_size = int(grain_duration * self.sr)
         if not self.len_input:
             _, _ = self.load_soundfile()
-        n_grains_in_source = int(self.len_input // grain_size)
+        n_grains_in_source = int(len(self.data) // grain_size)
         grains = [i*grain_size for i in range(n_grains_in_source)]
         return grains
     
@@ -93,8 +102,15 @@ class AnalysisObject():
             dict_clusters[lab].append(idx)
         return dict_clusters
 
+dir = "..\..\corpus\metro_sample_1"
 
-
+sr = 48000
+obj = AnalysisObject(dir,sr=sr)
+obj.dir
+y, sr = librosa.load(path=obj.input, sr=obj.sr)
+print(obj.data)
+obj.load_soundfile()
+print(obj.exists())
 
 
 def compute_spectral_descriptors(file_path, sr, output_dir, grain_size):

@@ -1,0 +1,36 @@
+{
+    "random_seed": 100,
+    "sample_rate": 48000,
+    "input_file": "..\\..\\corpus\\metro_sample_1\\input.wav",
+    "n_clusters": 4,
+    "n_iterations": 100,
+    "project": "markov_gs",
+    "window": "hanning",
+    "gs_method": "base_concatenative_synthesis_1",
+    "transition_probability_matrix": [
+        [
+            0.1,
+            0.15,
+            0.15,
+            0.6
+        ],
+        [
+            0.1,
+            0.1,
+            0,
+            0.8
+        ],
+        [
+            0,
+            0.05,
+            0.05,
+            0.9
+        ],
+        [
+            0,
+            0,
+            0.1,
+            0.9
+        ]
+    ]
+}

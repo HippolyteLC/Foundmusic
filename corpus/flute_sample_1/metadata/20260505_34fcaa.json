@@ -1,0 +1,41 @@
+{
+    "random_seed": 2027,
+    "sample_rate": 48000,
+    "input_file": "..\\..\\corpus\\flute_sample_1\\input.wav",
+    "n_clusters": 5,
+    "densities": [
+        0,
+        1,
+        4,
+        9,
+        49
+    ],
+    "grain_sizes": [
+        480,
+        1920,
+        4800,
+        9600
+    ],
+    "n_iterations": 50,
+    "stereo_shifts": [
+        0,
+        0,
+        6,
+        16,
+        96
+    ],
+    "delta_t": 0.12396694214875993,
+    "max_grains": 2,
+    "num_chans": 2,
+    "init_states_densities_sizes": [
+        13,
+        11
+    ],
+    "init_states_grain_cluster": [
+        1,
+        0
+    ],
+    "project": "markov_gs",
+    "poisson_change_rates": 4,
+    "window": "hanning"
+}

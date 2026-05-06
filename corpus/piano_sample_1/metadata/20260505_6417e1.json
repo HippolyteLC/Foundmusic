@@ -1,0 +1,38 @@
+{
+    "random_seed": 2027,
+    "sample_rate": 48000,
+    "input_file": "..\\..\\corpus\\piano_sample_1\\input.wav",
+    "n_clusters": 5,
+    "densities": [
+        0,
+        1,
+        3,
+        9
+    ],
+    "grain_sizes": [
+        1920,
+        4800,
+        9600
+    ],
+    "n_iterations": 50,
+    "stereo_shifts": [
+        0,
+        10,
+        32,
+        96
+    ],
+    "delta_t": 0.061983471074380236,
+    "max_grains": 2,
+    "num_chans": 2,
+    "init_states_densities_sizes": [
+        5,
+        3
+    ],
+    "init_states_grain_cluster": [
+        2,
+        2
+    ],
+    "project": "markov_gs",
+    "poisson_change_rates": 4,
+    "window": "hanning"
+}
