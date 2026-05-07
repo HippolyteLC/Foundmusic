@@ -39,6 +39,9 @@ Using a similar sample can result in very similar outputs if the same parametres
 ### src\grains\6_grain_analysis.ipynb
 Developing better analysis object with librosa. Computationally slower, however, better documented. 
 Only contains certain methods for audio description (all documented in librosa). 
+Wrote short function to show plots with two axes. 
+
+<!-- TODO: consider global descriptors for the grains? Such as attack, decay, etc.  -->
 
 <!-- TODO: do a case study of the two guitar input samples and compare input and output similarities.  -->
 <!-- TODO: add grain scatterplot saving for the different inputs. Compare differences between plots of different inputs. -->

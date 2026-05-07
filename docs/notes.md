@@ -71,8 +71,8 @@ A state j is accessible i -> j if pn_ij > 0 for some n (where n is the number of
 In discrete-time Markov chains the time spent in one state is one time unit (1) if a state has no self-transition. It is a geometric random variable otherwise, defined as geometric(1-p_ii). 
 In continuous-time Markov chains the time spent in each state is a continuous random variable. 
 
-Xenaxis Markovian Stochastic Music
-1) he outlines different matrical representations of transition probabilities, denoted by two parametres for each grain parametre. I.e., for a state f0, there are two MTPs by which the transition of f0 to f1, ..., fn is determined. Which of the different MTPs is chosen depends on a grain parametre couple defined previously. 
+- Xenaxis Markovian Stochastic Music
+he outlines different matrical representations of transition probabilities, denoted by two parametres for each grain parametre. I.e., for a state f0, there are two MTPs by which the transition of f0 to f1, ..., fn is determined. Which of the different MTPs is chosen depends on a grain parametre couple defined previously. 
 Xenaxis mentions perturbations to the transition matrix, these perturbations ensure the sound eventually reaches an equilibrium. 
 Brief explanation, he creates a coupling of parametre states to other parametre probability matrices, this way, 
 
@@ -83,12 +83,16 @@ Brief explanation, he creates a coupling of parametre states to other parametre 
     - Keep track and log production process
     - Note moments of creative production - link to some output
     - Document failures
-    - 
 
 ### Grain analysis
-<!-- TODO: Cite Fundamentals of music processing here -->
-The original input .wav file is loaded into the Analyzer class. Time-varying descriptors are then computed using the Librosa spectral features. For fast computation of the Short Time Fourier Transform (STFT), the size of the sliding window, the number of bins, and the hop size all need to be powers of two. The window size is set to 2048 samples. Considering our sample rate of 48kHz, the lowest detectable frequency becomes ≈23.4Hz. This is right about the lower hearing bound of human hearing (≈20Hz). In signal analysis, the time resolution is inversely proportional to the frequency resolution. If we increase our window size, we capture less time snapshots of the evolution of a signal, thus resulting in a lower temporal frequency. With the sampling rate at 48kHz, the window duration is $2048/48000≈0.043$. The input signal is split into windows of 43ms. If we want to increase our time resolution, we must take one power of two less in our window size, thus, 1024 samples. The frequency resolution is determined by the numbers of frequency bins we consider in our window. By the Nyquist frequency we only need frequency components below half of our sampling rate. In this case we need only consider frequencies below 24kHz. Generally, our FFT has the same size as our window, thus, 2048. 
-The hop size is set to 512 and determines the distance between one column computed of a signal and the next. The window uses a hanning window to ensure smooth windowing. To ensure all information of a signal is captured in the STFT, the hop length is typically set to $window length//4$. From the STFT we can now compute any of the available descriptors, spectral centroid, rolloff, contrast, rms, and zero-crossing rate. 
+<!-- TODO: Cite Fundamentals of music processing here : Meinard Muller-->
+The original input .wav file is loaded into the Analyzer class. Time-varying descriptors are then computed using the Librosa spectral features. For fast computation of the Short-Time Fourier Transform (STFT), the size of the window, the number of bins, and the hop size all need to be powers of two; this is a feature of the Fast Fourier Transform (FFT). The window size is set to 2048 samples. Considering our sample rate of 48kHz, the lowest detectable frequency becomes ≈23.4Hz. This is right about the lower hearing bound of human hearing (≈20Hz). In signal analysis, the time resolution is inversely proportional to the frequency resolution. If we increase our window size, we capture less time snapshots of the evolution of a signal, thus resulting in a lower temporal frequency. With the sampling rate at 48kHz, the window duration is $2048/48000≈0.043$. The input signal is split into windows of 43ms. If we want to increase our time resolution, we must take one power of two less in our window size, thus, 1024 samples. The frequency resolution is determined by the numbers of frequency bins we consider in our window. By the Nyquist frequency we only need frequency components below half of our sampling rate. In this case we need only consider frequencies below 24kHz. Typically, our FFT has the same size as our window, thus, 2048. These can be adjusted to increased time or frequency resolution. 
+The hop size is set to 512 and determines the distance between one column computed of a signal and the next. The window uses a hanning window to ensure smooth windowing. To ensure all information of a signal is captured in the STFT, the hop length is typically set to $window length//4$, therefore 512. From the STFT we can now compute any of the available descriptors: spectral centroid, rolloff, contrast, rms, and zero-crossing rate. 
+
+To associate descriptor values with the grains, the stft frames over which the descriptor values are computed are reformatted to fit the sample size of the original input ($total sample size = sample rate * input duration$). There is now a descriptor value at each sample point, which allows us to take the mean and standard deviation of each sample window corresponding to our grain size. 
+
+If we set our grain size to 100 ms, we have 0.1*48000= 4800 samples of audio data per grain. 
+
 
 
 # Questions 
