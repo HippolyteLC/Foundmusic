@@ -85,6 +85,11 @@ Brief explanation, he creates a coupling of parametre states to other parametre 
     - Document failures
     - 
 
+### Grain analysis
+<!-- TODO: Cite Fundamentals of music processing here -->
+The original input .wav file is loaded into the Analyzer class. Time-varying descriptors are then computed using the Librosa spectral features. For fast computation of the Short Time Fourier Transform (STFT), the size of the sliding window, the number of bins, and the hop size all need to be powers of two. The window size is set to 2048 samples. Considering our sample rate of 48kHz, the lowest detectable frequency becomes ≈23.4Hz. This is right about the lower hearing bound of human hearing (≈20Hz). In signal analysis, the time resolution is inversely proportional to the frequency resolution. If we increase our window size, we capture less time snapshots of the evolution of a signal, thus resulting in a lower temporal frequency. With the sampling rate at 48kHz, the window duration is $2048/48000≈0.043$. The input signal is split into windows of 43ms. If we want to increase our time resolution, we must take one power of two less in our window size, thus, 1024 samples. The frequency resolution is determined by the numbers of frequency bins we consider in our window. By the Nyquist frequency we only need frequency components below half of our sampling rate. In this case we need only consider frequencies below 24kHz. Generally, our FFT has the same size as our window, thus, 2048. 
+The hop size is set to 512 and determines the distance between one column computed of a signal and the next. The window uses a hanning window to ensure smooth windowing. To ensure all information of a signal is captured in the STFT, the hop length is typically set to $window length//4$. From the STFT we can now compute any of the available descriptors, spectral centroid, rolloff, contrast, rms, and zero-crossing rate. 
+
 
 # Questions 
 Q: since grain slicing/ selection is interwoven to a significant degree in a given algorithm, e.g. Markov chain of grains includes the selection. This depends on what granular parametres are handed off to the algorithm. It makes more sense to explore the workflow/ output of the three algorithms given three different types of grain analysis. Instead of having the workflow: 1) 3? grain slicing, 2) 3? grain selection, and 3) 3 grain synthesis, you would have 1) 1 grain slicing method, 2) 3 grain analysis representations: MFCC, Spectral descriptors, latent (RAVE Embedding for example), and 3) 3 algorithms that leverage the different analyses of the different representations. 
@@ -98,3 +103,4 @@ Meeting 28 april notes:
 
 # Ideas
 1. use descriptor values in grain parametre setting/ probability distribution coupling.
+2. stat analysis between different hop window sizes 
