@@ -45,6 +45,21 @@ TODO (week april 19th): read MPEG-7 Paper, read Caterpillar paper, add notes, re
     - Define different relevant methods of gs
     - Define abstract and physical models of gs
 
+### DSP Acoustic descriptors
+To Cite: Peeters et al (2001), Klapuri et al (DSP for msuic transcription, 2006)
+Note: X(k) refers to a vector of RMS levels of sub bands or a DFT spectrum at a time t (a certain frame)
+##### Spectral Features
+- Spectral flatness
+![Spectral Flatness Formula](\images\spectral_flatness_formula_klapuri_et_al.png)
+Describes how flat the spectrum of a sound is. The flatter the sound, a high value, is a noisy sound whereas the peakier the sound, a low value, is a tonal sound. Ratio of geometric mean to arithmetic mean of an analysis frame. 
+- Spectral Flux
+Frame by frame spectral change by comparing the distance between two spectrums at t and t-1.
+- Zero Crossing Rate
+![Zero Crossing Rate Formula](\images\zcr_formula_klapuri_et_al.png)
+Is describecfd as the number of times a signal changes sign. It is strongly correlated to the spectral centroid. It describes how much high-frequency content a signal contains. It is effective at discriminating different classes of percussive instruments.
+
+##### Temporal features 
+Temporal features are not used in the grain analysis. Temporal features are often used to describe things about the amplitude envelope of signals. However, since the grains sampled in this paper are rather short (100ms) and grains are arbitrarily indexed, temporal descriptors are less valuable. E.g. if we break a sound event by taking an arbitrary micro acoustic event within it, we lose the valuable informatoin that an amplitude envelope tells us about the sound event. 
 
 ### Granular Synthesis
 A grain is an atomic sound event, typically having a duration of 1-100ms. A grain has numerous parametres.Some general parametres prevalent in most methods of Granular Synthesis (GS) are grain size duration, grain starting point, grain waveform, stereo position, and amplitude envelope. Depending on the specific organization strategy of the grains, different parametres are most relevant. The main organization methods of granular synthesis as proposed by Curtis Roads in his book Microsound (2001) can be subdivided into two distinct branches: deterministic and non-deterministic methods. Deterministic methods of granular synthesis, such as Synchronous Granular Synthesis (SGS), Pitch-Synchronous Granular Synthesis, or Physical Models of granular synthesis, rely on deterministic global or local specifications of grain parametres. I.e. the model must either individually for each grain, or algorithmically for the set of grains, determine all the grain parametres. On the other hand, non-deterministic methods include stochastic variants, such as Quasi-SGS and Asynchronous Granular Synthesis, and, chaotic algorithms, such as a Lorentz System or a Logistic Map. Chaotic functions are deterministic in the sense that any given input will always yield the same output, however, as these systems are very sensitive to initial parametre conditions, the behaviour and output of these systems we cannot reliably predict. For this reason chaotic functions are included in the latter branch. 
@@ -89,10 +104,17 @@ Brief explanation, he creates a coupling of parametre states to other parametre 
 The original input .wav file is loaded into the Analyzer class. Time-varying descriptors are then computed using the Librosa spectral features. For fast computation of the Short-Time Fourier Transform (STFT), the size of the window, the number of bins, and the hop size all need to be powers of two; this is a feature of the Fast Fourier Transform (FFT). The window size is set to 2048 samples. Considering our sample rate of 48kHz, the lowest detectable frequency becomes ≈23.4Hz. This is right about the lower hearing bound of human hearing (≈20Hz). In signal analysis, the time resolution is inversely proportional to the frequency resolution. If we increase our window size, we capture less time snapshots of the evolution of a signal, thus resulting in a lower temporal frequency. With the sampling rate at 48kHz, the window duration is $2048/48000≈0.043$. The input signal is split into windows of 43ms. If we want to increase our time resolution, we must take one power of two less in our window size, thus, 1024 samples. The frequency resolution is determined by the numbers of frequency bins we consider in our window. By the Nyquist frequency we only need frequency components below half of our sampling rate. In this case we need only consider frequencies below 24kHz. Typically, our FFT has the same size as our window, thus, 2048. These can be adjusted to increased time or frequency resolution. 
 The hop size is set to 512 and determines the distance between one column computed of a signal and the next. The window uses a hanning window to ensure smooth windowing. To ensure all information of a signal is captured in the STFT, the hop length is typically set to $window length//4$, therefore 512. From the STFT we can now compute any of the available descriptors: spectral centroid, rolloff, contrast, rms, and zero-crossing rate. 
 
-To associate descriptor values with the grains, the stft frames over which the descriptor values are computed are reformatted to fit the sample size of the original input ($total sample size = sample rate * input duration$). There is now a descriptor value at each sample point, which allows us to take the mean and standard deviation of each sample window corresponding to our grain size. 
+To associate descriptor values with the grains, the stft frames over which the descriptor values are computed are reformatted to fit the sample size of the original input ($total sample size = sample rate * input duration$). There is now a descriptor value at each sample point, which allows us to take the mean and standard deviation of each sample window corresponding to our grain size. Each grain now has an adhering mean/ std of some descriptor value. As our analysis window is approximately 43ms, and our grains are 100ms, each grain takes a mean of ≈2.3 analysis window values. 
 
-If we set our grain size to 100 ms, we have 0.1*48000= 4800 samples of audio data per grain. 
+We have now managed to compute descriptors for each grain. The current problem is that we want to analyze grains from different inputs 
 
+
+
+<!-- IDEA: instead of using only two descriptors, which leave a lot to be desired in terms of acoustic description capability, can instead use a vector of selected features, and use PCA + CDA to reduce dimensionality. Then, the clusters can serve as points to potentially sample from? Klapuri et al, recommend using 10x fewer features than that you have training instances. So then,  -->
+
+### Discussion
+
+- Dynamic analysis of which descriptors for a given input. I.e. which descriptor vector best discriminates between all the different sound events present in the input. Again, for which set of descriptors can similar grains have low variance, and different grains have high variance.
 
 
 # Questions 
