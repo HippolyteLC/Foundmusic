@@ -106,7 +106,13 @@ The hop size is set to 512 and determines the distance between one column comput
 
 To associate descriptor values with the grains, the stft frames over which the descriptor values are computed are reformatted to fit the sample size of the original input ($total sample size = sample rate * input duration$). There is now a descriptor value at each sample point, which allows us to take the mean and standard deviation of each sample window corresponding to our grain size. Each grain now has an adhering mean/ std of some descriptor value. As our analysis window is approximately 43ms, and our grains are 100ms, each grain takes a mean of ≈2.3 analysis window values. 
 
-We have now managed to compute descriptors for each grain. The current problem is that we want to analyze grains from different inputs 
+We have now managed to compute descriptors for each grain. The current problem is that we want to analyze grains from different inputs. An optimal approach might be 
+
+- PCA for dimensionality reduction or visualization
+- k-means
+- gaussian mixture models
+- DBSCAN 
+
 
 
 
