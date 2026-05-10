@@ -333,6 +333,7 @@ class AnalyzerObject():
         return df
     
     def scale_metadata(self, path):
+        # TODO: change input, currently does not make sense
         """
         Use StandardScalar class from sklearn to scale data. 
         Important for unsupervised algorithms (GMMs and KMeans) or for
@@ -350,7 +351,7 @@ class AnalyzerObject():
         KMeans algorithm on scaled per grain feature data
         returns kmeans object
         """
-        _, df_scaled = self.load_metadata(path)
+        _, df_scaled = self.scale_metadata(path)
         features_scaled = df_scaled[:, 4:] # use the columns corresponding to the grain descriptors
         kmeans = sklearn.cluster.KMeans(n_clusters=n_clusters, n_init=1, random_state=0).fit(features_scaled)
         return kmeans # return kmeans object 
@@ -378,41 +379,41 @@ class AnalyzerObject():
 
 ### OBSOLETE FUNCTIONS
 
-    def get_cluster_obj(self, n_clusters, arr_1, arr_2):
-        """ 
-        here n_init defaults to 1, the number of runs with diff centroid seeds. 
-        random_state: use int to make deterministic
-        """
-        x = np.array([[i, j] for i, j in zip(arr_1, arr_2)])
-        kmeans = sklearn.cluster.KMeans(n_clusters=n_clusters, n_init='auto', random_state=0).fit(x) 
-        return kmeans, arr_1, arr_2
+    # def get_cluster_obj(self, n_clusters, arr_1, arr_2):
+    #     """ 
+    #     here n_init defaults to 1, the number of runs with diff centroid seeds. 
+    #     random_state: use int to make deterministic
+    #     """
+    #     x = np.array([[i, j] for i, j in zip(arr_1, arr_2)])
+    #     kmeans = sklearn.cluster.KMeans(n_clusters=n_clusters, n_init='auto', random_state=0).fit(x) 
+    #     return kmeans, arr_1, arr_2
 
-    def display_scatter_plot(self, arr_1, arr_2):
-        plt.figure(figsize=(10, 7))
-        plt.scatter(arr_1, arr_2, alpha=0.7)
-        plt.ylabel("Spectral Flatness")
-        plt.xlabel("Spectral Root Mean Square")
-        plt.grid(True, linestyle='--', alpha=0.6)
-        plt.show()
+    # def display_scatter_plot(self, arr_1, arr_2):
+    #     plt.figure(figsize=(10, 7))
+    #     plt.scatter(arr_1, arr_2, alpha=0.7)
+    #     plt.ylabel("Spectral Flatness")
+    #     plt.xlabel("Spectral Root Mean Square")
+    #     plt.grid(True, linestyle='--', alpha=0.6)
+    #     plt.show()
     
-    def save_scatter_plot(self, arr_1, arr_2):
-        y_label = "Spectral Flatness"
-        x_label = "Spectral Root Mean Square"
-        plt.figure(figsize=(10, 7))
-        plt.scatter(arr_1, arr_2, alpha=0.7)
-        plt.ylabel(y_label)
-        plt.xlabel(x_label)
-        plt.grid(True, linestyle='--', alpha=0.6)
-        save_title = f""
-        plt.savefig()
+    # def save_scatter_plot(self, arr_1, arr_2):
+    #     y_label = "Spectral Flatness"
+    #     x_label = "Spectral Root Mean Square"
+    #     plt.figure(figsize=(10, 7))
+    #     plt.scatter(arr_1, arr_2, alpha=0.7)
+    #     plt.ylabel(y_label)
+    #     plt.xlabel(x_label)
+    #     plt.grid(True, linestyle='--', alpha=0.6)
+    #     save_title = f""
+    #     plt.savefig()
 
-    def get_dict_clusters(self, n_clusters, arr_1, arr_2):
-        kmeans, _, _ = self.get_cluster_obj(self, n_clusters, arr_1, arr_2)
-        dict_clusters = {}
-        for idx, lab in enumerate(kmeans.labels_):
-            dict_clusters[lab] = dict_clusters.get(lab, [])
-            dict_clusters[lab].append(idx)
-        return dict_clusters
+    # def get_dict_clusters(self, n_clusters, arr_1, arr_2):
+    #     kmeans, _, _ = self.get_cluster_obj(self, n_clusters, arr_1, arr_2)
+    #     dict_clusters = {}
+    #     for idx, lab in enumerate(kmeans.labels_):
+    #         dict_clusters[lab] = dict_clusters.get(lab, [])
+    #         dict_clusters[lab].append(idx)
+    #     return dict_clusters
 
 
 
