@@ -10,6 +10,7 @@ import json
 import csv
 import pandas as pd
 import os
+from sklearn.preprocessing import StandardScaler
 
 
 
@@ -172,7 +173,7 @@ class Analyzer():
 
 def show_scatter_plt(x, y, x_label, y_label, title, alpha=0.7):
     """ 
-    Show scatter plot for two descriptor arrays. Add title, x and y labels. 
+    Show scatter plot for two arrays. Add title, x and y labels. 
     """
     plt.figure(figsize=(10, 7))
     plt.scatter(x, y, alpha=alpha)
@@ -222,10 +223,10 @@ class AnalyzerObject():
         The other parametres are set to default analysis values. 
         Alternative recommended values to be considered in the time/ frequency 
         accuracy trade-off: 4096, 2048, 1024 (then follows for num_freq_bins: 2049, 1025, 513, etc.)
-        Radix_exp is 2^12: 4096, increase or decrease accordingly with num_freq_bins. 
+        Radix_exp is 2^11: 2048, increase or decrease accordingly with num_freq_bins. 
         returns a spec arr of shape (2049, n_grains-1), this is computationally useful.
         Slide length is automatically set to fft_window size / 4, so in this case 2^11 = 2048, 2048/4, 512. 
-        We only compute the entire audio's BFT and spectral arr once. More lacking in accuracy though (resolution). 
+        We only compute the entire audio's BFT and spectral arr once. 
         """
         if not self.loaded_y:
             self.load_y()
@@ -261,6 +262,11 @@ class AnalyzerObject():
         return buffer 
     
     def get_grain_descriptors(self, grain_size, descriptor_arr):
+        """
+        Compute mean of per sample descriptor value for a grain of a certain size
+        from the full descriptor array from original input. 
+        Input descriptor arr contains per sample values.
+        """
         print(f"Length y: {len(self.y)} Length descr y: {len(descriptor_arr)}")
         grain_mean_descr = []
         n_grains = int(len(descriptor_arr)//grain_size)
@@ -270,6 +276,13 @@ class AnalyzerObject():
         return grain_mean_descr
     
     def compute_grain_descriptors(self, grain_duration):
+        """
+        Compute centroid, spread, skewness, kurtosis (good for percussive
+        discrimination in instrument classification, Ansi Klapuri et al. 2006)
+        Compute flux, rolloff, flatness (good for instrument discrimination, Klapuri et al. 2006)
+        list of dict to df of per grain features.
+        df shape: (n_samples, n_features)
+        """
         spec_arr, spectral_obj = self.get_spectral_arr()
         grain_size = int(self.sr*grain_duration)
         n_grains = int(len(self.y)//grain_size)
@@ -297,17 +310,64 @@ class AnalyzerObject():
             grain_descriptors["kurtosis"] = kurtosis[i]
             grain_descriptors["id"] = get_parametre_hashing(grain_descriptors, hash_length=9)
             grain_metadata.append(grain_descriptors)
-        file_params = {"grain_size": grain_size, "descriptors": list(grain_descriptors.keys())}
-        file_name = get_parametre_hashing(file_params, hash_length=6)
+        # file_params = {"grain_size": grain_size, "descriptors": list(grain_descriptors.keys())}
         df = pd.DataFrame(grain_metadata)
-        file_path = os.path.normpath(self.metadata + "_" + str(file_name) + "_grain_metadata.csv")
+        df = df.iloc[:, [-1, 0, 2, 1].extend(list(range(3, df.shape[-1])))] 
+        return df
+
+    def save_metadata(self, df):
+        """
+        Save df to csv file of per grain descriptors.
+        """
+        file_params = {"descriptors": list(df[-1].keys())}
+        file_name = get_parametre_hashing(file_params, hash_length=8)
+        file_path = os.path.normpath(self.metadata + "\\grain_metadata_" + str(file_name) + ".csv")
         df.to_csv(file_path, index=False)
+        print(f"Saved to csv to: {file_path}")
 
-        # df_loaded = pd.read_csv("data.csv")
-        # loaded_data = df_loaded.to_dict(orient="records")
-
+    def load_metadata(self, path):
+        """
+        load csv as pandas df
+        """
+        df = pd.read_csv(path)
+        return df
     
-
+    def scale_metadata(self, path):
+        """
+        Use StandardScalar class from sklearn to scale data. 
+        Important for unsupervised algorithms (GMMs and KMeans) or for
+        feature projection algs (PCA, HDBSCAN, etc.)
+        """
+        df = self.load_metadata(path)
+        df_copy = df
+        scaler = StandardScaler()
+        df_descriptors_to_scale = df.iloc[:,4:]
+        df.iloc[:,4 :] = scaler.fit_transform(df_descriptors_to_scale)
+        return df_copy, df # return original and scaled df 
+    
+    def compute_kmeans(self, path, n_clusters):
+        """
+        KMeans algorithm on scaled per grain feature data
+        returns kmeans object
+        """
+        _, df_scaled = self.load_metadata(path)
+        features_scaled = df_scaled[:, 4:] # use the columns corresponding to the grain descriptors
+        kmeans = sklearn.cluster.KMeans(n_clusters=n_clusters, n_init=1, random_state=0).fit(features_scaled)
+        return kmeans # return kmeans object 
+    
+    def get_cluster_dict(self, path, n_clusters):
+        """
+        computes kmeans object and writes data to a dictionary. 
+        Useful for granular synthesis algorithms that utilize cluster based
+        grain sampling.
+        """
+        kmeans = self.compute_kmeans(path, n_clusters)
+        dict_clusters = {}
+        for idx, lab in enumerate(kmeans.labels_):
+            dict_clusters[lab] = dict_clusters.get(lab, [])
+            dict_clusters[lab].append(idx)
+        return dict_clusters, kmeans
+    
 
 
 
