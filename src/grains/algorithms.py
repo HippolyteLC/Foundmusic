@@ -1,6 +1,122 @@
 import numpy as np
 import soundfile as sf
 
+class Granulizer():
+    def __init__(self, sr):
+        self.sr = sr
+        pass
+
+class MarkovGranulizer(Granulizer):
+    def __init__(self, sr, densities):
+        # TODO: add second granular parametre option
+        super().__init__(self, sr)
+        self.densities = densities
+        
+    def rand_tpm(self, n_states, seed=None):
+        """
+        Returns a transition probability matrix (tpm) of 
+        n_states x n_states. 
+
+        Example usage 1) 
+        If you have 3 clusters for grain waveform selection you 
+        can input the n_clusters variable from the Analyzer class into
+        this method to generate an according random tpm. 
+        """
+        if seed:
+            np.random.seed(seed)
+        random_tpm = np.random.rand(n_states,n_states)
+        tpm = []
+        for i in random_tpm:
+            row = i / np.sum(i)
+            tpm.append(row)
+        tpm = np.array(tpm)
+        return tpm
+    
+    def run(self, y, n_iterations, delta_t, n_grains, window, n_states, n_clusters, seed, init_states, grains, dict_clusters):
+        """
+        TBD
+        n_states here will be the number clusters * number of densities
+        init_states: needs to be length of the number of grains / streams
+        """
+        params = locals().copy
+        # TODO: rethink function. Compute streams for grains separately and stack these
+        # have delta t vary as a state parametre
+        grain_size = grains[1] - grains[0]
+        np.random.seed(seed)
+        n_states = n_clusters * len(self.densities)
+        tpm = self.rand_tpm(n_states, seed=seed)
+        # states with possible density, size values
+        states = []
+        clusters = list(range(n_clusters))
+        for i in range(n_clusters):
+            for j in range(len(self.densities)):
+                states.append([
+                    clusters[i], self.densities[j]
+                ])
+        output_buffer = np.array([[],[]]) 
+        num_chans = 2
+        curr_states = init_states
+        for _ in range(n_iterations):
+            delta_t_samples = int(delta_t * self.sr)
+            temp_buffer = np.zeros((num_chans, delta_t_samples)) # two output channels
+            # multiplier = np.random.choice(range(1,7))
+            # delta_t_samples = get_delta_t(multiplier)
+            for i in range(n_grains):
+                # get the cluster state and change the state tracking array
+                next_state = np.random.choice(range(n_states), p=tpm[curr_states[i]])
+                curr_states[i] = next_state
+                cluster, density = states[next_state][0], states[next_state][1]
+
+                grain_idx = np.random.choice(dict_clusters[cluster]) 
+                try:
+                    grain_y_idx = grains[grain_idx] # grain index in the original audio array input.wav 
+                except Exception as e:
+                    grain_idx -= 1
+                    grain_y_idx = grains[grain_idx]
+
+                # get the density 
+                grain_y_end = grain_y_idx + grain_size
+                if grain_y_end > y.shape[-1]:
+                    grain_y_end = y.shape[-1] # clipping if exceeds input audio bounds
+                grain = y[grain_y_idx:grain_y_end]
+                
+                # TODO: apply pitch shift?     
+
+                if window:
+                    grain = grain * window(len(grain))
+            
+                # get the stereo shift
+                # stereo_shift = stereo_shifting[densities.index(density)]
+                # print(f"grain length: {len(grain)}")
+                # print(density)
+                # grain_lengths.append(len(grain))
+                # skip this iteration if no grain
+                if density == 0:
+                    continue
+
+                # apply the density
+                incr = int(temp_buffer.shape[-1] // density)
+                # print("INCr:" , incr)
+                for i in range(density):
+                    e = i*incr + len(grain)
+                    if e > temp_buffer.shape[-1]:
+                        e = temp_buffer.shape[-1]
+                    for j in range(num_chans):
+                        temp_buffer[j][i*incr:e] = temp_buffer[j][i*incr:e] + grain[:len(temp_buffer[j][i*incr:e])]
+                # apply stereo shift
+                # if stereo_shift:
+                #     temp_buffer[-1] = np.concatenate([np.zeros(stereo_shift), temp_buffer[-1][:-stereo_shift]])
+
+                # apply windowing 
+                if window:
+                    for k in range(num_chans):
+                        temp_buffer[k] = temp_buffer[k] * window(temp_buffer.shape[-1])
+
+                output_buffer = np.concatenate([output_buffer, temp_buffer], axis=1)
+            # delta_t += delta_t_incr
+        # output_buffer / np.max(np.abs(output_buffer))
+        return output_buffer, params
+
 
 # TODO: Add metadata saving from a render. Data might include: grain waveform, grain timestamps
 # grain size, etc. for each channel of the final output audio array.

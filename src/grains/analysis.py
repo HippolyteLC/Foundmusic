@@ -368,6 +368,11 @@ class AnalyzerObject():
             dict_clusters[lab].append(idx)
         return dict_clusters, kmeans
     
+    def grains(self, grain_duration):
+        grain_size = int(self.sr*grain_duration)
+        n_grains = int(len(self.y)//grain_size)
+        grains = [i*grain_size for i in range(n_grains)]
+        return grains
 
 
 
