@@ -5,11 +5,13 @@ from audioflux.type import SpectralDataType, SpectralFilterBankScaleType
 import matplotlib.pyplot as plt
 import sklearn
 import librosa
-
-
+from writing import get_parametre_hashing
+import json 
+import csv
+import pandas as pd
 import os
-PATH = "..\..\corpus\\guitar_sample_2"
-sr = 48000
+
+
 
 class Analyzer():
     """
@@ -126,19 +128,41 @@ class Analyzer():
             if difference > 0: # padding the buffer 
                 buffer.extend([descriptor_arr[-1] for _ in range(difference)])
             return buffer 
-           
-    def get_grain_descriptors(self, grain_duration, descriptor_arr):
+        
+    def compute_all_descriptors(self, grain_duration):
         grain_size = int(self.sr*grain_duration)
-        descriptor_y = self.convert_descriptor_arr(descriptor_arr)
+        n_grains = int(len(self.y)//grain_size)
+        grains = [i*grain_size for i in range(n_grains)]
+
+        zrc_arr = self.compute_zrc()
+        flatness_arr = self.compute_flatness()
+        rms_arr = self.compute_rms()
+        rolloff_arr = self.compute_rolloff()
+
+        zrc_array = self.convert_descriptor_arr(zrc_arr)
+        zrc_grain_descr, _, _ = self.get_grain_descriptors(grain_size=grain_size, descriptor_arr=zrc_array)
+ 
+        flatness_array = self.convert_descriptor_arr(flatness_arr)
+        flatness_grain_descr, _, _ = self.get_grain_descriptors(grain_size=grain_size, descriptor_arr=flatness_array)
+
+        rms_array = self.convert_descriptor_arr(rms_arr)
+        rms_grain_descr, _, _ = self.get_grain_descriptors(grain_size=grain_size, descriptor_arr=rms_array)
+
+        rolloff_array = self.convert_descriptor_arr(rolloff_arr)
+        rolloff_grain_descr, _, _ = self.get_grain_descriptors(grain_size=grain_size, descriptor_arr=rolloff_array)
+
+               
+    def get_grain_descriptors(self, grain_size, descriptor_arr):
+        print(f"Length y: {len(self.y)} Length descr y: {len(descriptor_arr)}")
         grain_mean_descr = []
         grain_std_descr = []
-        n_grains = int(len(descriptor_y)//grain_size)
+        n_grains = int(len(descriptor_arr)//grain_size)
         for i in range(n_grains):
-            grain_dscr_mean = np.mean(descriptor_y[i*grain_size:(i+1)*grain_size])
-            grain_dscr_std = np.std(descriptor_y[i*grain_size:(i+1)*grain_size])
+            grain_dscr_mean = np.mean(descriptor_arr[i*grain_size:(i+1)*grain_size])
+            grain_dscr_std = np.std(descriptor_arr[i*grain_size:(i+1)*grain_size])
             grain_mean_descr.append(grain_dscr_mean)
             grain_std_descr.append(grain_dscr_std)
-        return grain_mean_descr, grain_std_descr, descriptor_y
+        return grain_mean_descr, grain_std_descr, descriptor_arr
     
     def n_grains(self, grain_duration):
         grain_size = int(self.sr*grain_duration)
@@ -169,42 +193,30 @@ def get_spectrogram(data, y_axis, x_axis, sr, title=None):
 
 
 
-### OBSOLETE FUNCTIONS AND CLASSES BELOW
+### Class using AudioFlux below
 # --------------------------------------------------------------------------#
 
-class AnalysisObject():
-    """ 
-    Analysis object with audio flux
+class AnalyzerObject():
+    """
+    Using specific 2048 n_fft and window length, and 512 hop length for good freq/ time resolution trade off
+    Conversion of these window values to the grain descriptor values is included
     """
 
-    def __init__(self, dir, sr):
-        self.dir = dir
-        self.sr = sr
-        self.input = os.path.normpath(self.dir + "\\input.wav")
-        self.data = None
+    def __init__(self, path, sr):
+        self.path = path
+        self.sr=sr
+        self.input_path = os.path.normpath(path + "\\input.wav")
+        self.metadata = os.path.normpath(path + "\\metadata")
+        self.y = None
+        self.stft = None
+        self.loaded_y=False
+        self.loaded_stft=False
 
-    def exists(self):
-        return os.path.exists(self.input)
-
-    def load_soundfile(self):
-        print(self.input)
-        if os.path.exists(self.input):
-            y, _ = af.read(path=self.input, samplate=self.sr)
-            self.data = y
+    def load_y(self):
+        y, _ = af.read(path=self.input_path, samplate=self.sr)
+        self.y = y
     
-    def define_grains(self, grain_duration):
-        """
-        compute grain duration as s x samples operation
-        return grain starting indexes in the original audio array (self.y)
-        """
-        grain_size = int(grain_duration * self.sr)
-        if not self.len_input:
-            _, _ = self.load_soundfile()
-        n_grains_in_source = int(len(self.data) // grain_size)
-        grains = [i*grain_size for i in range(n_grains_in_source)]
-        return grains
-    
-    def get_spectral_arr(self, grain_duration, num_freq_bins=None, radix_exp=None):
+    def get_spectral_arr(self, num_freq_bins=1025, radix_exp=11):
         """
         Each frame corresponds to a grain due to slide_length=grain_size. 
         The other parametres are set to default analysis values. 
@@ -212,15 +224,12 @@ class AnalysisObject():
         accuracy trade-off: 4096, 2048, 1024 (then follows for num_freq_bins: 2049, 1025, 513, etc.)
         Radix_exp is 2^12: 4096, increase or decrease accordingly with num_freq_bins. 
         returns a spec arr of shape (2049, n_grains-1), this is computationally useful.
+        Slide length is automatically set to fft_window size / 4, so in this case 2^11 = 2048, 2048/4, 512. 
         We only compute the entire audio's BFT and spectral arr once. More lacking in accuracy though (resolution). 
         """
-        grain_size = int(grain_duration * self.sr)
-
-        if not num_freq_bins:
-            num_freq_bins = 2049 # standard FFT values
-        if not radix_exp:
-            radix_exp = 12 #2^12
-        bft_obj = af.BFT(num=num_freq_bins, samplate=self.sr, radix2_exp=radix_exp, slide_length=grain_size,
+        if not self.loaded_y:
+            self.load_y()
+        bft_obj = af.BFT(num=num_freq_bins, samplate=self.sr, radix2_exp=radix_exp, 
             data_type=af.type.SpectralDataType.MAG,
             scale_type=af.type.SpectralFilterBankScaleType.LINEAR)       
         spec_arr = bft_obj.bft(self.y)
@@ -229,16 +238,81 @@ class AnalysisObject():
                                 fre_band_arr=bft_obj.get_fre_band_arr())
         n_time = spec_arr.shape[-1]  
         spectral_obj.set_time_length(n_time)
+        return spec_arr, spectral_obj 
 
-        return spec_arr, spectral_obj #return spec_arr and obj to compute descriptors
-
-    def get_descriptor_array(self, descriptor, grain_duration):
+    def convert_descriptor_arr(self, descriptor_arr):
+        """ 
+        Grain duration in seconds. 
+        Convert the descriptor arr to have descr values for each sample, can then compute per grain
+        descr value. 
         """
-        descriptor: one of the following methods [centroid, rms, crest]
-        """
-        spec_arr, spectral_obj = self.get_spectral_arr(grain_duration)
-        return spectral_obj.descriptor(spec_arr)
+        incr = self.y.shape[-1]//descriptor_arr.shape[-1]
+        buffer = []
+        index = -1
+        for i in range(self.y.shape[-1]):    
+            if i % incr == 0:
+                index+=1
+            if index == descriptor_arr.shape[-1]:
+                break
+            buffer.append(descriptor_arr[index])
+        difference = self.y.shape[-1] - len(buffer)
+        if difference > 0: # padding the buffer 
+            buffer.extend([descriptor_arr[-1] for _ in range(difference)])
+        return buffer 
     
+    def get_grain_descriptors(self, grain_size, descriptor_arr):
+        print(f"Length y: {len(self.y)} Length descr y: {len(descriptor_arr)}")
+        grain_mean_descr = []
+        n_grains = int(len(descriptor_arr)//grain_size)
+        for i in range(n_grains):
+            grain_dscr_mean = np.mean(descriptor_arr[i*grain_size:(i+1)*grain_size])
+            grain_mean_descr.append(grain_dscr_mean)
+        return grain_mean_descr
+    
+    def compute_grain_descriptors(self, grain_duration):
+        spec_arr, spectral_obj = self.get_spectral_arr()
+        grain_size = int(self.sr*grain_duration)
+        n_grains = int(len(self.y)//grain_size)
+        grains = [i*grain_size for i in range(n_grains)]
+        centroid = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.centroid(spec_arr)))
+        flux = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.flux(spec_arr)))
+        rolloff = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.rolloff(spec_arr)))
+        flatness = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.flatness(spec_arr)))
+        spread = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.spread(spec_arr)))
+        skewness = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.skewness(spec_arr)))
+        kurtosis = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.kurtosis(spec_arr)))
+
+        grain_metadata = []
+        for i in range(len(grains)):
+            grain_descriptors = {}
+            grain_descriptors["index"] = grains[i]
+            grain_descriptors["sr"] = self.sr
+            grain_descriptors["size"] = grain_size
+            grain_descriptors["centroid"] = centroid[i]
+            grain_descriptors["flux"] = flux[i]
+            grain_descriptors["rolloff"] = rolloff[i]
+            grain_descriptors["flatness"] = flatness[i]
+            grain_descriptors["spread"] = spread[i]
+            grain_descriptors["skewness"] = skewness[i]
+            grain_descriptors["kurtosis"] = kurtosis[i]
+            grain_descriptors["id"] = get_parametre_hashing(grain_descriptors, hash_length=9)
+            grain_metadata.append(grain_descriptors)
+        file_params = {"grain_size": grain_size, "descriptors": list(grain_descriptors.keys())}
+        file_name = get_parametre_hashing(file_params, hash_length=6)
+        df = pd.DataFrame(grain_metadata)
+        file_path = os.path.normpath(self.metadata + "_" + str(file_name) + "_grain_metadata.csv")
+        df.to_csv(file_path, index=False)
+
+        # df_loaded = pd.read_csv("data.csv")
+        # loaded_data = df_loaded.to_dict(orient="records")
+
+            
+
+
+
+
+### OBSOLETE FUNCTIONS
+
     def get_cluster_obj(self, n_clusters, arr_1, arr_2):
         """ 
         here n_init defaults to 1, the number of runs with diff centroid seeds. 
