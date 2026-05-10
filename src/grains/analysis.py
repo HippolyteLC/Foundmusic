@@ -306,7 +306,7 @@ class AnalyzerObject():
         # df_loaded = pd.read_csv("data.csv")
         # loaded_data = df_loaded.to_dict(orient="records")
 
-            
+    
 
 
 
