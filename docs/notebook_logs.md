@@ -41,6 +41,11 @@ Developing better analysis object with librosa. Computationally slower, however,
 Only contains certain methods for audio description (all documented in librosa). 
 Wrote short function to show plots with two axes. 
 
+
+### src\grains\7_pipeline_test.ipynb
+Notebook in which the .py functions are tested, from granular analysis, to clustering, to using a dummied down version of the markov gs original nb (nb5). 
+Experimented with frequencies in the sharp notes, (black piano keys) ranging from approx. 58 to 370 Hz. Interesting qualities to the output, however, obviously a tremendous amount of character of the input sound is lost, need to be kept in consideration. Otherwise, the pipeline works quite smooth, and allows for a much more rapid start to finish from inputting the sample audio, to tweaking synthesis parametres and testing the output. 
+Work to be done still on the tpm distributions, as these are currently either manually, quasi-poisson, or fully stochastically initialized. Otherwise, considering other descriptor or MIR methods can still be interesting, but perhaps not adding further descriptors. Could retrieve grain pitch/ fundamental frequency, and perhaps utilize that? The grain frequency parametre could then be linked to its density, or, to its panning, volume, etc. granular parametre coupling can still be explored further. 
 <!-- TODO: consider global descriptors for the grains? Such as attack, decay, etc.  -->
 
 <!-- TODO: do a case study of the two guitar input samples and compare input and output similarities.  -->

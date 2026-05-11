@@ -30,6 +30,10 @@ RQ: Are markov chains implementrd
 
 # Background 
 
+TODO: 
+1) check microsound for part about frequency of synchronous synthesis streams where the density of grains are very high, formants, side bands, etc. Also about amplitude of new waveform being increased/ decreased. In the experiments with certain densities 
+2) Check fundams. of music processing for theory on fundamental freq/ pitch multiples, relative frequency
+
 TODO (week april 19th): read MPEG-7 Paper, read Caterpillar paper, add notes, read through fundamentals of Markov Processes/ Markov transition matrix/ Markov Chains >> Read Markov generative music papers (or GS paper) / implement different modes of classifying grains, i.e. asserting grain states to transition to- and from. Also, consider if another GS method might be more suited for exploring interesting temporal structures in combi. Check datasets used in Neurogranular synthesis paper, The Concatenator / Let it Bee papers (or other papers in the field). Delve into math of spectral descriptors
 
 - Background on digital signal processing
