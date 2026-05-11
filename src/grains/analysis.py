@@ -312,14 +312,16 @@ class AnalyzerObject():
             grain_metadata.append(grain_descriptors)
         # file_params = {"grain_size": grain_size, "descriptors": list(grain_descriptors.keys())}
         df = pd.DataFrame(grain_metadata)
-        df = df.iloc[:, [-1, 0, 2, 1].extend(list(range(3, df.shape[-1])))] 
+        # TODO: instead change this to use df.loc for selecting only descriptor columns in the data scaling.
+        # indexing_l = [-1, 0, 2, 1].extend(list(range(3, df.shape[-1])))
+        df = df[["id", "sr", "index", "size", "centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis"]] 
         return df
 
     def save_metadata(self, df):
         """
         Save df to csv file of per grain descriptors.
         """
-        file_params = {"descriptors": list(df[-1].keys())}
+        file_params = df.iloc[-1].to_dict()
         file_name = get_parametre_hashing(file_params, hash_length=8)
         file_path = os.path.normpath(self.metadata + "\\grain_metadata_" + str(file_name) + ".csv")
         df.to_csv(file_path, index=False)
@@ -340,11 +342,11 @@ class AnalyzerObject():
         feature projection algs (PCA, HDBSCAN, etc.)
         """
         df = self.load_metadata(path)
-        df_copy = df
+        df_scaled = df
         scaler = StandardScaler()
-        df_descriptors_to_scale = df.iloc[:,4:]
-        df.iloc[:,4 :] = scaler.fit_transform(df_descriptors_to_scale)
-        return df_copy, df # return original and scaled df 
+        df_descriptors_to_scale = df_scaled[["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis"]]
+        df_scaled[["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis"]] = scaler.fit_transform(df_descriptors_to_scale)
+        return df, df_scaled # return original and scaled df 
     
     def compute_kmeans(self, path, n_clusters):
         """
@@ -352,7 +354,7 @@ class AnalyzerObject():
         returns kmeans object
         """
         _, df_scaled = self.scale_metadata(path)
-        features_scaled = df_scaled[:, 4:] # use the columns corresponding to the grain descriptors
+        features_scaled = df_scaled[["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis"]] # use the columns corresponding to the grain descriptors
         kmeans = sklearn.cluster.KMeans(n_clusters=n_clusters, n_init=1, random_state=0).fit(features_scaled)
         return kmeans # return kmeans object 
     

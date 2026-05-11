@@ -54,6 +54,8 @@ Note: X(k) refers to a vector of RMS levels of sub bands or a DFT spectrum at a 
 Describes how flat the spectrum of a sound is. The flatter the sound, a high value, is a noisy sound whereas the peakier the sound, a low value, is a tonal sound. Ratio of geometric mean to arithmetic mean of an analysis frame. 
 - Spectral Flux
 Frame by frame spectral change by comparing the distance between two spectrums at t and t-1.
+- Spectral Rolloff
+Denotes how much of the frequenc
 - Zero Crossing Rate
 ![Zero Crossing Rate Formula](\images\zcr_formula_klapuri_et_al.png)
 Is describecfd as the number of times a signal changes sign. It is strongly correlated to the spectral centroid. It describes how much high-frequency content a signal contains. It is effective at discriminating different classes of percussive instruments.

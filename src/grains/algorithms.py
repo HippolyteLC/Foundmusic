@@ -9,7 +9,7 @@ class Granulizer():
 class MarkovGranulizer(Granulizer):
     def __init__(self, sr, densities):
         # TODO: add second granular parametre option
-        super().__init__(self, sr)
+        super().__init__(sr)
         self.densities = densities
         
     def rand_tpm(self, n_states, seed=None):
@@ -32,13 +32,21 @@ class MarkovGranulizer(Granulizer):
         tpm = np.array(tpm)
         return tpm
     
-    def run(self, y, n_iterations, delta_t, n_grains, window, n_states, n_clusters, seed, init_states, grains, dict_clusters):
+    def run(self, y, n_iterations, delta_t, n_grains, window, n_clusters, seed, init_states, grains, dict_clusters):
         """
         TBD
         n_states here will be the number clusters * number of densities
         init_states: needs to be length of the number of grains / streams
+        IMPORTANT: output buffer needs to be Transposed when using save function from writing.py
         """
-        params = locals().copy
+        params = locals().copy()
+        del params["self"]
+        del params["y"]
+        del params["grains"]
+        del params["dict_clusters"]
+        params["init_states"] = [int(i) for i in params["init_states"]]
+        params["window"] = params["window"].__name__
+
         # TODO: rethink function. Compute streams for grains separately and stack these
         # have delta t vary as a state parametre
         grain_size = grains[1] - grains[0]
