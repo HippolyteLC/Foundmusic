@@ -1,65 +1,59 @@
 # Description thesis
-Can stochastic models of granular synthesis produce viable 
 
+# Introduction
+**Context of digital music production**
+- Sample based synthesis methods, computationally expensive methods, data hungry methods. 
+- Refer to CataRT (IRCAM), the concatenator, roads, xenaxis, miranda, to provide context of this research. 
+- Refer to DSP methods/libraries?
 
-# Bullet points on Introduction
-IMPORTANT: why have I chosen each method. Elaborate on motivation for all the choices made. 
+**The problem**
+- Field recordings are often not used as main sound material in computer music composition, and are typically utilized as ambient noise (find ref)
+- Field recordings can be very noisy, vary in content, be lengthy, lower audio quality: difficult to work with
+- Music production software is expensive, and has a steep learning curve
 
-- Everyone has access to field recordings,
-- Introduction to field recording and motivation in music production
-- Introduction to signal processing and libraries
+**The objective**
+- Provide a framework to generate music from field recording input via granular synthesis
+- The framework utilizes classic DSP analysis methods, that utilize the magnitude spectrogram/ FFT to analyze the field recording and its grains
 - Introducing granular synthesis as a technqiue to use sample sounds to make music
     - Corpus based granular synthesis
     - Parrticle synthesis
     - Clouds of particles and organised sotchastically/deterministic
-- Introduction to algorithmic approach of producing music and also why we are doing this?
-    - Chaotic system
-    - Abstract models
-    - Markov/ stochastic models
-- Can we extract musicality, from sound not categorically recorded in a non acoustic environments, using different abstract models of granular synthesis? 
+- The framework uses markov chains to model state transitions where each state corresponds to a short time window with n grains and m grain parametres
+- Refer to DSP methods/libraries?
 
-- Evaluation: 
-    - Workflow for creating music from field recordings to granular analysis, to granular synthesis. 
+**Contribution**
+- The framework allows to explore various abstract models to control granular parametres, it allows for leveraging the power classical DSP analysis methods for any input, it outputs audio samples which can be used to compose further in a DAW environment
 
-### Introduction
-Synthesizer plug-ins and sample libraries are the main sources of sounds beside recording that are used by most computer musicians. Recording high quality audio within an acoustic setting is not accessible to everyone. Field recordings are recordings of audio that are not recorded in an acoustic settings; the content of a field recording can be of any sound: wind, rain, birds, a piano in a station, a phone-recorded acapella, the list goes on. Field recordings are accessible to nearly everyone. In computer music production field recordings are often used as background ambient noise and not the centrepiece of a song (ref Olafur Arnalds). As field recordings are often longer, they also comprise various sound events. It is then more difficult to extract the totality of the sound character from a lengthy field recording in a song, when it is not simply used as background ambient noise. 
+
+Field recordings are recordings of audio that are not recorded in an acoustic setting; the content of a field recording can be of any sound: wind, rain, birds, a piano in a station, a phone-recorded acapella, the list goes on. Field recordings are accessible to nearly everyone. In computer music production field recordings are often used as background ambient noise and are not the centrepiece of a song (ref Olafur Arnalds). As field recordings are often longer, they also comprise various sound events. It is then more difficult to extract the totality of the sound character from a lengthy field recording in a song when it is not simply used as background ambient noise. 
+
 There has been recent research into various ways in which input audio, such as textural ambient sound, is encoded into a latent space, and the latent space can be decoded from, allowing for smoother and potentially novel (re)synthesis of sounds. There has also been research into using sampled sounds and large corpora of sounds for musical sound synthesis: concatenative synthesis (the concat, CataRT, Neural GS). Neural latent spaces of sounds where any point in the latent space can be reconstructed into a sound is an example (irish paper/ neural GS paper/ IRCAM papers). Another example is by engel et al. that managed to output a real-time DDSP framework. However, neural methods of sound generation with sample inputs are limited in two main ways: first, outputs are biased to their training data which limits the novelty of the scope of sound generation, and second, the linkage of a sample input to synthesis parametres as in a DDSP framework loses out on much of the information that is available in a more lengthy field recording (e.g. a 1 minute recording of a metro station that is converted to parametres for a synthesis module loses out on much of the nuance of information from the original input). Methods that use the original input data in their output avoid the abstractness problem. The novelty issue is solved dependent of the parametres of such methods. An example of such a method is granular synthesis: the arranging of microsounds, either sampled from an input sound, or granulation as in Microsound (2001, Roads), or from a generated waveform, e.g. a simple sinusoid of a certain frequency, phase, amplitude. One branch of models of granular synthesis is algorithmic modelling of the synthesis parametres. Xenaxis proposed a markovian stochastic approach to modelling grains of sounds and their parametres in a time sequence in his book Formalized Music as an attempt to provide an alternative approach to serial music composition. The stochastic algorithmic approach leverages sampling grains and their parametres from probability distributions and resolves the complexity issue of controlling parametres for many grains. Depending on the probability distributions and its parametres, such as the average rate lambda in a poisson distribution, it should take longer before a time sequence composed by such an algorithm becomes ergodic, stable. The stochastic models allow us to create novel time sequences of grains. 
 This paper proposes an approach in python to algorithmic music which leverages the characteristics of field recordings to be musical centrepieces. 
 
-RQ: Are markov chains implementrd
 
 # Background 
 
-TODO: 
-1) check microsound for part about frequency of synchronous synthesis streams where the density of grains are very high, formants, side bands, etc. Also about amplitude of new waveform being increased/ decreased. In the experiments with certain densities 
-2) Check fundams. of music processing for theory on fundamental freq/ pitch multiples, relative frequency
-
-TODO (week april 19th): read MPEG-7 Paper, read Caterpillar paper, add notes, read through fundamentals of Markov Processes/ Markov transition matrix/ Markov Chains >> Read Markov generative music papers (or GS paper) / implement different modes of classifying grains, i.e. asserting grain states to transition to- and from. Also, consider if another GS method might be more suited for exploring interesting temporal structures in combi. Check datasets used in Neurogranular synthesis paper, The Concatenator / Let it Bee papers (or other papers in the field). Delve into math of spectral descriptors
-
-- Background on digital signal processing
-    - Frequency / Time representations of sound
-    - Spectral analysis of sound
-    - Explain spectral descriptors (refer to AudioFlux) library
-    - Spectral descriptors for grains (CataRT)
-    - Slicing / Onset detection / other
-
-- Background on granular synthesis 
-(Curtis Roads / )
-    - Define granular parametres
-    - Define different relevant methods of gs
-    - Define abstract and physical models of gs
-
 ### DSP Acoustic descriptors
 To Cite: Peeters et al (2001), Klapuri et al (DSP for msuic transcription, 2006)
+
 Note: X(k) refers to a vector of RMS levels of sub bands or a DFT spectrum at a time t (a certain frame)
 ##### Spectral Features
+
+- Spectral Centroid
+The sum of normalized magnitude spectrums for each frequency bin. 
+- Spectral Spread
+The spectral spread relates to the bandwidth of the frequency spectrum at a frame
+- 
+
+The following features: *spectral flatness*, *spectral rolloff*, *spectral flux*, and *zero crossing rate*, are effective in discriminating between different instruments (Klapuri et al. Ch 6). 
 - Spectral flatness
 ![Spectral Flatness Formula](\images\spectral_flatness_formula_klapuri_et_al.png)
 Describes how flat the spectrum of a sound is. The flatter the sound, a high value, is a noisy sound whereas the peakier the sound, a low value, is a tonal sound. Ratio of geometric mean to arithmetic mean of an analysis frame. 
 - Spectral Flux
-Frame by frame spectral change by comparing the distance between two spectrums at t and t-1.
+Frame by frame spectral change by comparing the distance between two spectrums at t and t-1. It is defined as the squared $l^2$ norm of the this frame by frame magnitude difference. 
 - Spectral Rolloff
-Denotes how much of the frequenc
+![Spectral Rolloff Formula](\images\spectral_rolloff_formula_klapuri_et_al.png)
+Denotes below which frequency bin a certain fraction of the frequency content ($\gamma$) resides. Typically, 0.85 and 0.95 are used for $\gamma$. 
 - Zero Crossing Rate
 ![Zero Crossing Rate Formula](\images\zcr_formula_klapuri_et_al.png)
 Is describecfd as the number of times a signal changes sign. It is strongly correlated to the spectral centroid. It describes how much high-frequency content a signal contains. It is effective at discriminating different classes of percussive instruments.
@@ -84,47 +78,52 @@ Granulation is the use of a sampled sound as input for the grain waveform parame
 
 
 ### Markov theory
-informatoin sou
-A Markov process or chain constitutes a chain of events by which the next state or event is determined only by the current state=Markov Property. Higher order Markov chains look back a higher number of states to determine the next state. A Markov process 
-Some defs: 
-A state j is accessible i -> j if pn_ij > 0 for some n (where n is the number of steps). We assume every state is accessible from itself (p0: 0 steps, p0_ii = 1). Two states can communicate if they can access one another. These communicating states can be partitioned into communicating classes. A Markov chain is irreducible if all states can communicate with one another. A state is recurrent if pn_ii = 1, transient if < 1. A Markov chain is aperiodic if all its states are aperiodic. 
+A Markov process or chain constitutes a chain of events by which the next state or event is determined only by the current state (Markov Property). Higher order Markov chains look back a higher number of states to determine the next state. 
+A state j is accessible i -> j if pn_ij > 0 for some n (where n is the number of steps). We assume every state is accessible from itself (p0: 0 steps, p0_ii = 1). Two states can communicate if they can access one another. 
+<!-- These communicating states can be partitioned into communicating classes. A Markov chain is irreducible if all states can communicate with one another. A state is recurrent if pn_ii = 1, transient if < 1. A Markov chain is aperiodic if all its states are aperiodic.  -->
 
 In discrete-time Markov chains the time spent in one state is one time unit (1) if a state has no self-transition. It is a geometric random variable otherwise, defined as geometric(1-p_ii). 
 In continuous-time Markov chains the time spent in each state is a continuous random variable. 
 
 - Xenaxis Markovian Stochastic Music
-he outlines different matrical representations of transition probabilities, denoted by two parametres for each grain parametre. I.e., for a state f0, there are two MTPs by which the transition of f0 to f1, ..., fn is determined. Which of the different MTPs is chosen depends on a grain parametre couple defined previously. 
+he outlines different matrical representations of transition probabilities, denoted by two parametres for each grain parametre. I.e., for a state f0, there are two TPMs by which the transition of f0 to f1, ..., fn is determined. Which of the different TPMs is chosen depends on a grain parametre couple defined previously. 
 Xenaxis mentions perturbations to the transition matrix, these perturbations ensure the sound eventually reaches an equilibrium. 
 Brief explanation, he creates a coupling of parametre states to other parametre probability matrices, this way, 
 
+### TODO section
+
+TODO: 
+1) check microsound for part about frequency of synchronous synthesis streams where the density of grains are very high, formants, side bands, etc. Also about amplitude of new waveform being increased/ decreased. In the experiments with certain densities 
+2) Check fundams. of music processing for theory on fundamental freq/ pitch multiples, relative frequency
+
+TODO (week april 19th): read MPEG-7 Paper, read Caterpillar paper, add notes, read through fundamentals of Markov Processes/ Markov transition matrix/ Markov Chains >> Read Markov generative music papers (or GS paper) / implement different modes of classifying grains, i.e. asserting grain states to transition to- and from. Also, consider if another GS method might be more suited for exploring interesting temporal structures in combi. Check datasets used in Neurogranular synthesis paper, The Concatenator / Let it Bee papers (or other papers in the field). Delve into math of spectral descriptors
 
 # Methodology
+### Field recording input
+A field recording is recorded using a Google Pixel 9. Typically, field recordings with a length of 10 seconds to 10 minutes are considered. Audio is recorded in mono with a sampling rate of 48kHz and stored initially in .m4a format. The audio is converted to .wav format using ffmpeg in the command line (this process can be done via the programming language of choice). The .wav format audio is loaded with the same sampling rate of 48kHz in mono using the AudioFlux library. The output is an audio NumPy array corresponding to the sampling rate and original duration of the audio input. By default it is loaded in a single channel. 
 
+### Input audio analysis/ Grain analysis
+The analysis uses classic DSP audio descriptors. To compute these descriptors first a Fourier Transform is computed. AudioFlux uses a Based Fourier Transform class which is similar to the Short-Time Fourier Transform (STFT). Similarly to the STFT, specific parametres are chosen for the Fast Fourier Transform (FFT): window size, the number of frequency bins, and the sliding window. These are all powers of two, which is necessary for optimal computational speed of the FFT. 
+
+The size of the FFT window must be chosen depending on the grain duration and the sampling rate. In our case the chosen grain duration is 100ms. The grain consists of $0.1*48000=4800$ samples. To capture sufficient detail per grain we must adjust our FFT size accordingly. A large FFT window results in a high frequency resolution and a low time resolution. A small FFT window results in a low frequency resolution and a high time resolution. These are inversely proportional. If we choose an FFT size of 2048 samples, each frame of the transform will be roughly $2048/48000≈0.043s$ long. By decreasing the window size further we would capture more detail in per frame transitions, however, our frequency resolution would drop down further. Our Nyquist frequency is $48000/2=24kHz$. Typically, the number of frequency bins in an FFT computation is half the FFT size plus 1. The number of bins with a window of 2048 is then 1025. The hop size is typically set to one fourth the size of the fft. This allows to capture sufficient detail considering that we are also applying a Hanning window on each analysis window. 
+
+The BFT of the entire input audio is computed with these parametres in mind. Once the BFT is computed, each of the aforementioned spectral features are computed on the BFT. For each analysis window of 43 ms a descriptor value is computed. To fit this to our grains of 100ms duration, the computed descriptor array values for the entire input audio are allocated to each sample. E.g. with an input of 10s duration, there are $10*48000=480,000$ samples. The first 2048 samples are assigned the first descriptor frame value, the next 2048 samples the next descriptor frame value, and so forth. Then the mean over samples is computed to obtain the per grain descriptor values. The result is a table where each row corresponds to a grain; the row contains its unique hashed ID, its sampling rate, its starting index in the loaded audio array, its size in samples, and its descriptor values in each of the following columns. This table is stored in a .csv file. 
+
+For visualization of the grains in a lower dimensional space the choice can be made between selecting two or three descriptors and use those columns for analysis, or, to use dimensionality reduction methods. In this paper only Principal Component Analysis is considered. 
+For the synthesis stage of the framework, it is useful to compute clusters of grains based on their spectral features. KMeans is chosen as an unsupervised method to clusters the grains together. The scikit-learn library offers a powerful class and method to fit n_clusters to a set of data. The spectral features exist on different scales, so to ensure the data is scaled before passing it into the KMeans algorithm, the data is first scaled using the StandardScaler object form scikit-learn. The main parametre of interest in the KMeans algorithm is the number of clusters. The choice for the number of clusters should be made depending on the visual analysis of the grains and the desired size of the state space later on in the pipeline. Typically, when experimenting with different parametre sizes n_clusters=3 has been a viable choice for different field recording inputs. 
+
+### Granular synthesis
+Several algorithms have been explored in this research, however, the main algorithm category is markov chain granular synthesis. The main components particular to this synthesis strategy is the Transition Probability Matrix (TPM) which require some form of initialization. Methods of intialization explored in this research include frequency based probability estimation, uniform random sampled probability distributions, and manually input transition probabilities. 
+
+### Notes: 
 - Design science: 
     - Keep track and log production process
     - Note moments of creative production - link to some output
     - Document failures
 
-### Grain analysis
-<!-- TODO: Cite Fundamentals of music processing here : Meinard Muller-->
-The original input .wav file is loaded into the Analyzer class. Time-varying descriptors are then computed using the Librosa spectral features. For fast computation of the Short-Time Fourier Transform (STFT), the size of the window, the number of bins, and the hop size all need to be powers of two; this is a feature of the Fast Fourier Transform (FFT). The window size is set to 2048 samples. Considering our sample rate of 48kHz, the lowest detectable frequency becomes ≈23.4Hz. This is right about the lower hearing bound of human hearing (≈20Hz). In signal analysis, the time resolution is inversely proportional to the frequency resolution. If we increase our window size, we capture less time snapshots of the evolution of a signal, thus resulting in a lower temporal frequency. With the sampling rate at 48kHz, the window duration is $2048/48000≈0.043$. The input signal is split into windows of 43ms. If we want to increase our time resolution, we must take one power of two less in our window size, thus, 1024 samples, and so forth. The frequency resolution is determined by the numbers of frequency bins we consider in our window. By the Nyquist frequency we only need frequency components below half of our sampling rate. In this case we need only consider frequencies below 24kHz. Typically, our FFT has the same size as our window, thus, 2048. These can be adjusted to increased time or frequency resolution. The size of our fft, i.e. the number of samples we consider, is thus both linked directly to the duration of our window and the number of frequency bins we can consider. 
-The hop size is set to 512 and determines the distance between one column computed of a signal and the next. The window uses a hanning window to ensure smooth windowing. To ensure all information of a signal is captured in the STFT, the hop length is typically set to $window length//4$, therefore 512. From the STFT we can now compute any of the available descriptors: spectral centroid, rolloff, contrast, rms, and zero-crossing rate. 
-
-To associate descriptor values with the grains, the stft frames over which the descriptor values are computed are reformatted to fit the sample size of the original input ($total sample size = sample rate * input duration$). There is now a descriptor value at each sample point, which allows us to take the mean and standard deviation of each sample window corresponding to our grain size. Each grain now has an adhering mean/ std of some descriptor value. As our analysis window is approximately 43ms, and our grains are 100ms, each grain takes a mean of ≈2.3 analysis window values. 
-
-We have now managed to compute descriptors for each grain. The current problem is that we want to analyze grains from different inputs. An optimal approach might be 
-
-- PCA for dimensionality reduction or visualization
-- k-means
-- gaussian mixture models
-- DBSCAN 
-
-
-
-
 <!-- IDEA: instead of using only two descriptors, which leave a lot to be desired in terms of acoustic description capability, can instead use a vector of selected features, and use PCA + CDA to reduce dimensionality. Then, the clusters can serve as points to potentially sample from? Klapuri et al, recommend using 10x fewer features than that you have training instances. So then,  -->
 
-### Discussion
+# Discussion
 
 - Dynamic analysis of which descriptors for a given input. I.e. which descriptor vector best discriminates between all the different sound events present in the input. Again, for which set of descriptors can similar grains have low variance, and different grains have high variance.
 
@@ -139,6 +138,44 @@ Meeting 21 april notes:
 Meeting 28 april notes:
 - byte tracking (RoboFlow, already implemented)
 
+Meeting 12 May notes;
+What I did:
+1) Descriptors and literature
+2) Pipeline is working
+3) 
+To discuss:
+- poster
+- onstage
+- may: write paper, do more experiments, develop more markov approaches. 
+- currently: Design Approach, log experiments with different inputs, different functions, 
+
+- markov experiments,
+- analysis update,
+
+
 # Ideas
 1. use descriptor values in grain parametre setting/ probability distribution coupling.
 2. stat analysis between different hop window sizes 
+
+
+
+
+
+
+
+# method/ bg text? 
+
+The larger the window, the greater our frequency resolution and th. The smaller our window, the 
+The window size is set to 2048 samples. Considering our sample rate of 48kHz, the lowest detectable frequency becomes ≈23.4Hz. This is right about the lower hearing bound of human hearing (≈20Hz). In signal analysis, the time resolution is inversely proportional to the frequency resolution. If we increase our window size, we capture less time snapshots of the evolution of a signal, thus resulting in a lower temporal frequency. With the sampling rate at 48kHz, the window duration is $2048/48000≈0.043$.
+
+ Time-varying descriptors are then computed using the Librosa spectral features. For fast computation of the Short-Time Fourier Transform (STFT), the size of the window, the number of bins, and the hop size all need to be powers of two; this is a feature of the Fast Fourier Transform (FFT). The window size is set to 2048 samples. Considering our sample rate of 48kHz, the lowest detectable frequency becomes ≈23.4Hz. This is right about the lower hearing bound of human hearing (≈20Hz). In signal analysis, the time resolution is inversely proportional to the frequency resolution. If we increase our window size, we capture less time snapshots of the evolution of a signal, thus resulting in a lower temporal frequency. With the sampling rate at 48kHz, the window duration is $2048/48000≈0.043$. The input signal is split into windows of 43ms. If we want to increase our time resolution, we must take one power of two less in our window size, thus, 1024 samples, and so forth. The frequency resolution is determined by the numbers of frequency bins we consider in our window. By the Nyquist frequency we only need frequency components below half of our sampling rate. In this case we need only consider frequencies below 24kHz. Typically, our FFT has the same size as our window, thus, 2048. These can be adjusted to increased time or frequency resolution. The size of our fft, i.e. the number of samples we consider, is thus both linked directly to the duration of our window and the number of frequency bins we can consider. 
+The hop size is set to 512 and determines the distance between one column computed of a signal and the next. The window uses a hanning window to ensure smooth windowing. To ensure all information of a signal is captured in the STFT, the hop length is typically set to $window length//4$, therefore 512. From the STFT we can now compute any of the available descriptors: spectral centroid, rolloff, contrast, rms, and zero-crossing rate. 
+
+To associate descriptor values with the grains, the stft frames over which the descriptor values are computed are reformatted to fit the sample size of the original input ($total sample size = sample rate * input duration$). There is now a descriptor value at each sample point, which allows us to take the mean and standard deviation of each sample window corresponding to our grain size. Each grain now has an adhering mean/ std of some descriptor value. As our analysis window is approximately 43ms, and our grains are 100ms, each grain takes a mean of ≈2.3 analysis window values. 
+
+We have now managed to compute descriptors for each grain. The current problem is that we want to analyze grains from different inputs. An optimal approach might be 
+
+- PCA for dimensionality reduction or visualization
+- k-means
+- gaussian mixture models
+- DBSCAN 

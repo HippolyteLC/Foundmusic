@@ -216,7 +216,7 @@ class AnalyzerObject():
     def load_y(self):
         y, _ = af.read(path=self.input_path, samplate=self.sr)
         self.y = y
-    
+        self.loaded_y = True
     def get_spectral_arr(self, num_freq_bins=1025, radix_exp=11):
         """
         Each frame corresponds to a grain due to slide_length=grain_size. 
@@ -275,7 +275,7 @@ class AnalyzerObject():
             grain_mean_descr.append(grain_dscr_mean)
         return grain_mean_descr
     
-    def compute_grain_descriptors(self, grain_duration):
+    def compute_grain_descriptors(self, grain_duration, num_freq_bins=1025, radix_exp=11):
         """
         Compute centroid, spread, skewness, kurtosis (good for percussive
         discrimination in instrument classification, Ansi Klapuri et al. 2006)
@@ -283,7 +283,7 @@ class AnalyzerObject():
         list of dict to df of per grain features.
         df shape: (n_samples, n_features)
         """
-        spec_arr, spectral_obj = self.get_spectral_arr()
+        spec_arr, spectral_obj = self.get_spectral_arr(num_freq_bins, radix_exp)
         grain_size = int(self.sr*grain_duration)
         n_grains = int(len(self.y)//grain_size)
         grains = [i*grain_size for i in range(n_grains)]
@@ -372,6 +372,8 @@ class AnalyzerObject():
         return dict_clusters, kmeans
     
     def grains(self, grain_duration):
+        if not self.loaded_y:
+            self.load_y()
         grain_size = int(self.sr*grain_duration)
         n_grains = int(len(self.y)//grain_size)
         grains = [i*grain_size for i in range(n_grains)]
