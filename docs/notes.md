@@ -121,7 +121,10 @@ First, a state in the context of this research is a vector of grain parametres. 
 Second, the matrices are then either initialized individually, or the entire TPM is computed at once. With the prior approach, you can determine via one of the three mentioned approaches how to initialize the TPM for that specific parametre. It should be noted that the frequency sampling is only viable for the grain cluster parametre. To compute the frequency based probability distribution, the original input audio is sampled from. Iteratively, a window passes over the input, the window duration should correspond to the grain duration set previously, and counts how the frequency of a certain grain type (a grain belonging to a cluster $n$) is followed by another grain type. Then the row of frequencies is divided by the sum of the row, resulting in probabilities that sum to 1. For the uniform random initialization the initial values are selected stochastically, but to ensure each row sums to 1 the rows are also divided by their sum total. This normalization is only necessary for the manual input approach if the matrix values are not selected so as to sum to 1. To compute a full TPM for the entire state space, the Kronecker product of the matrices are taken, which we can do because we assume the parametre probabilities are independent from one another.
 
 #### Other parametres
+n_iterations, delta_t, ...
 There are some other parametres explored in the Markov synthesis exploration. Stereo shifting coupled to grain density, similar to how parametres are coupled in grainlet synthesis (Microsound, Ch3). Manipulating the duration of the time window $\Delta t$
+
+#### 
 
 <!-- TODO: check in the markov gen music paper why normalization after sum division -->
 
