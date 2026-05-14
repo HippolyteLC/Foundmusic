@@ -113,23 +113,32 @@ For visualization of the grains in a lower dimensional space the choice can be m
 For the synthesis stage of the framework, it is useful to compute clusters of grains based on their spectral features. KMeans is chosen as an unsupervised method to clusters the grains together. The scikit-learn library offers a powerful class and method to fit n_clusters to a set of data. The spectral features exist on different scales, so to ensure the data is scaled before passing it into the KMeans algorithm, the data is first scaled using the StandardScaler object form scikit-learn. The main parametre of interest in the KMeans algorithm is the number of clusters. The choice for the number of clusters should be made depending on the visual analysis of the grains and the desired size of the state space later on in the pipeline. Typically, when experimenting with different parametre sizes n_clusters=3 has been a viable choice for different field recording inputs. 
 
 ### Markov Granular synthesis
-Several algorithms have been explored in this research (Asynchronous Granular Synthesis for instance), however, the main algorithm category of interest is the markov chain granular synthesizer. The main component particular to this synthesis strategy is the Transition Probability Matrix (TPM) which requires some form of initialization. Methods of TPM intialization explored in this research include frequency based probability estimation, uniform random sampled probability distributions, and manually input transition probabilities. Also particular to this approach is that we must designate states for the state transitions modeled by the TPM. 
+With the markov chain granular synthesis methods the grain parametre control is managed by a transition probability matrix (TPM). The probability distributions for the rows of the matrix, i.e. the state transition probabilities, can be determined in different ways. Methods of TPM intialization explored in this research include frequency based probability estimation, uniform random sampled probability distributions, and manually input transition probabilities. Also particular to this approach is that we must designate states for the state transitions modeled by the TPM. 
 
 #### Transition Probability Matrices and Markov States
-First, a state in the context of this research is a vector of grain parametres. The grain parametres selected in this research were grain density over a time window $\Delta t$, grain size, and grain cluster. The density values can be chosen arbitrarily, so long as they are a non-negative integer. The grain size values are also selected arbitrarily; however, one should consider that sampled grains shorter than 40ms become nearly undiscernable from one another, and grains longer than 100 ms are atypical of granular synthesizer, as grains length range from 1ms to 100ms, however longer grain durations are certainly viable. Finally, the grain clusters specify the cluster from which the grain waveform parametre will be sampled. The sampling from a cluster is with uniform probability. 
+A state in the context of this research is a vector of grain parametres. The grain parametres selected in this research were grain density over a time window $\Delta t$, grain size, and grain cluster. The density values can be chosen arbitrarily, so long as they are a non-negative integer. The grain size values are also selected arbitrarily; however, one should consider that sampled grains shorter than 40ms become nearly undiscernable from one another, and grains longer than 100 ms are atypical of granular synthesizer, as grains length range from 1ms to 100ms, however longer grain durations are certainly viable. Finally, the grain clusters specify the cluster from which the grain waveform parametre will be sampled. The sampling from a cluster is with uniform probability. 
 
-Second, the matrices are then either initialized individually, or the entire TPM is computed at once. With the prior approach, you can determine via one of the three mentioned approaches how to initialize the TPM for that specific parametre. It should be noted that the frequency sampling is only viable for the grain cluster parametre. To compute the frequency based probability distribution, the original input audio is sampled from. Iteratively, a window passes over the input, the window duration should correspond to the grain duration set previously, and counts how the frequency of a certain grain type (a grain belonging to a cluster $n$) is followed by another grain type. Then the row of frequencies is divided by the sum of the row, resulting in probabilities that sum to 1. For the uniform random initialization the initial values are selected stochastically, but to ensure each row sums to 1 the rows are also divided by their sum total. This normalization is only necessary for the manual input approach if the matrix values are not selected so as to sum to 1. To compute a full TPM for the entire state space, the Kronecker product of the matrices are taken, which we can do because we assume the parametre probabilities are independent from one another.
+The TPMs are then either generated for each separate grain parametre, or the TPM for the vector parametre states is computed at once. With the prior approach, you can determine via one of the three mentioned approaches how to initialize the TPM for that specific parametre. It should be noted that the frequency sampling is only viable for the grain cluster parametre since we consider no data from which we could sample density and size parametres. To compute the frequency based probability distribution, the original input audio is sampled from. Iteratively, a window passes over the input, the window duration should correspond to the grain duration set previously and counts how the frequency of a certain grain type (a grain belonging to a cluster $n$) is followed by another grain type. Then the row of frequencies is divided by the sum of the row, resulting in probabilities that sum to 1 (normalization). For the uniform random initialization the initial values are selected stochastically, but to ensure each row sums to 1 the rows are also divided by their sum total. This normalization is only necessary for the manual input approach if the matrix values are not selected to sum to 1. To compute a full TPM for the entire state space if individual parametre TPMs were computed, the Kronecker product of the matrices are taken, which we do because we assume the random variables determining the parametres values are independent from one another. 
 
-#### Other parametres
-n_iterations, delta_t, ...
-There are some other parametres explored in the Markov synthesis exploration. Stereo shifting coupled to grain density, similar to how parametres are coupled in grainlet synthesis (Microsound, Ch3). Manipulating the duration of the time window $\Delta t$
+#### Synthesis parametres
+The main parametres other than the transition probabilities and grain parametres will be elaborated here. Firstly, the number of grains *n_grains* is decided, typically in my experiments values were selected between 1 and 4 grains. Higher grain values are possible, however, the more grains are selected, the greater the loss of information from individual grains. This is due to the fact that the inherent loudness of grains is not controlled. If one grain has a high loudness value, the output for that time window will be dominated by the loud grain. Attempts to separate grains in stereo are made in the linked parametre section. The time window (or screen duration) is denoted by the paramere $\Delta t$. Typically, a value between 100ms and 1000ms was chosen. With exploration of values below a 100ms, it should be noted that grain waveform information will be lost in the output as the grain duration is clipped to the length of the window. Higher densities in short time windows will also result in grain overlap and the density of the grain will produce frequency bands and potentially sidebands (Microsound Ch3, and for this provide specific moment analsysis in such an output) corresponding to the grain density parametre. Finally, the last parametre for the synthesis is the number of output channels *num_channels*. As two channels are sufficient for producing stereo effects, which is explored in the Linked Parametres section, only two channel outputs are used. 
 
-#### 
+#### Initial states
+The initial grain states are determined either manually or uniform randomly for each grain $g_1, g_2, ..., g_n$. The number of initial states corresponds to the number of grains $n_grains$. 
+
+#### Linked parametres
+As in grainlet synthesis, parametre linkage has also been explored in this module. Stereo shifting was applied such that the first indexed density $d$ parametre value is linked to a stereo shifting of 0, i.e. no stereo shifting. Each next parametre is linked so that the right channel, of the two output channels, is shifted by a multiple of 1ms. For instance, the second density $d$ is would be shifted an non-negative integer multiple $n * 48$ when our sampling rate is set to 48kHz. 
+
+### Output
+The output is obtained by intializing an empty array, corresponding to the number of channels. For each iteration a buffer array is created corresponding to $\Delta t$ of 0 valued entries. Then, for each $i_th$ grain its information is added to this buffer. Each buffer is then concatenated with the output buffer. 
+The output is an array of shape (*num_channels*, *n_iterations * sampling_rate * $\Delta t$*). The soundfile python library is used to save the data to .wav format. Along with the audio data, all the described parametres above, aside from the TPMs, are saved to JSON files. 
+
+### Evaluation
+To evaluate the output and the entire framework multiple methods are available. 
 
 <!-- TODO: check in the markov gen music paper why normalization after sum division -->
 
-
-
+___
 ### Notes: 
 - Design science: 
     - Keep track and log production process
@@ -141,7 +150,7 @@ There are some other parametres explored in the Markov synthesis exploration. St
 # Discussion
 
 - Dynamic analysis of which descriptors for a given input. I.e. which descriptor vector best discriminates between all the different sound events present in the input. Again, for which set of descriptors can similar grains have low variance, and different grains have high variance.
-
+- Grain size as parametre is means that the initial analysis performed on the set grain duration is thrown out of the window in a sense. 
 
 # Questions 
 Q: since grain slicing/ selection is interwoven to a significant degree in a given algorithm, e.g. Markov chain of grains includes the selection. This depends on what granular parametres are handed off to the algorithm. It makes more sense to explore the workflow/ output of the three algorithms given three different types of grain analysis. Instead of having the workflow: 1) 3? grain slicing, 2) 3? grain selection, and 3) 3 grain synthesis, you would have 1) 1 grain slicing method, 2) 3 grain analysis representations: MFCC, Spectral descriptors, latent (RAVE Embedding for example), and 3) 3 algorithms that leverage the different analyses of the different representations. 
@@ -160,7 +169,6 @@ What I did:
 3) 
 To discuss:
 - poster
-- onstage
 - may: write paper, do more experiments, develop more markov approaches. 
 - currently: Design Approach, log experiments with different inputs, different functions, 
 
