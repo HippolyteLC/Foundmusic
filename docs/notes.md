@@ -118,6 +118,7 @@ TODO:
 TODO (week april 19th): read MPEG-7 Paper, read Caterpillar paper, add notes, read through fundamentals of Markov Processes/ Markov transition matrix/ Markov Chains >> Read Markov generative music papers (or GS paper) / implement different modes of classifying grains, i.e. asserting grain states to transition to- and from. Also, consider if another GS method might be more suited for exploring interesting temporal structures in combi. Check datasets used in Neurogranular synthesis paper, The Concatenator / Let it Bee papers (or other papers in the field). Delve into math of spectral descriptors
 
 # Methodology
+<!-- TODO: add flowchart representation of pipeline -->
 ### Field recording input
 A field recording is recorded using a Google Pixel 9. Typically, field recordings with a length of 10 seconds to 10 minutes are considered. Audio is recorded in mono with a sampling rate of 48kHz and stored initially in .m4a format. The audio is converted to .wav format using ffmpeg in the command line (this process can be done via the programming language of choice). The .wav format audio is loaded with the same sampling rate of 48kHz in mono using the AudioFlux library. The output is an audio NumPy array corresponding to the sampling rate and original duration of the audio input. By default it is loaded in a single channel. 
 
@@ -165,6 +166,14 @@ ___
     - Document failures
 
 <!-- IDEA: instead of using only two descriptors, which leave a lot to be desired in terms of acoustic description capability, can instead use a vector of selected features, and use PCA + CDA to reduce dimensionality. Then, the clusters can serve as points to potentially sample from? Klapuri et al, recommend using 10x fewer features than that you have training instances. So then,  -->
+
+# Results
+
+Evaluation:
+- audio descriptor based analysis of outputs
+- embeddings of outputs can be analyzed for diversity of outputs compared to synthesis parametres
+- HCI like study (usability)
+- can use metrics for audio quality / FAD / MuQ-Eval / Texture evolution
 
 # Discussion
 
