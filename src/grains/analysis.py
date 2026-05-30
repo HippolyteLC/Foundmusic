@@ -348,23 +348,28 @@ class AnalyzerObject():
         df_scaled[["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis"]] = scaler.fit_transform(df_descriptors_to_scale)
         return df, df_scaled # return original and scaled df 
     
-    def compute_kmeans(self, path, n_clusters):
+    def compute_kmeans(self, path, n_clusters, features=None):
         """
         KMeans algorithm on scaled per grain feature data
+        features: a list of strings representing desired analysis features
         returns kmeans object
         """
         _, df_scaled = self.scale_metadata(path)
-        features_scaled = df_scaled[["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis"]] # use the columns corresponding to the grain descriptors
+        if not features:
+            features = ["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis"]
+            features_scaled = df_scaled[features] # use the columns corresponding to the grain descriptors
+        else:
+            features_scaled = df_scaled[features]
         kmeans = sklearn.cluster.KMeans(n_clusters=n_clusters, n_init=1, random_state=0).fit(features_scaled)
         return kmeans # return kmeans object 
     
-    def get_cluster_dict(self, path, n_clusters):
+    def get_cluster_dict(self, path, n_clusters, features=None):
         """
         computes kmeans object and writes data to a dictionary. 
         Useful for granular synthesis algorithms that utilize cluster based
         grain sampling.
         """
-        kmeans = self.compute_kmeans(path, n_clusters)
+        kmeans = self.compute_kmeans(path, n_clusters, features)
         dict_clusters = {}
         for idx, lab in enumerate(kmeans.labels_):
             dict_clusters[lab] = dict_clusters.get(lab, [])

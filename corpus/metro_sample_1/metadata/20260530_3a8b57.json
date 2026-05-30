@@ -1,0 +1,14 @@
+{
+    "n_iterations": 30,
+    "delta_t": 0.2,
+    "n_grains": 4,
+    "window": "hanning",
+    "n_clusters": 3,
+    "seed": 90,
+    "init_states": [
+        2,
+        0,
+        2,
+        4
+    ]
+}
