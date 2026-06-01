@@ -7,10 +7,11 @@ class Granulizer():
         pass
 
 class MarkovGranulizer(Granulizer):
-    def __init__(self, sr, densities):
+    def __init__(self, sr, densities=None, panning=None):
         # TODO: add second granular parametre option
         super().__init__(sr)
         self.densities = densities
+        self.panning = panning
         
     def rand_tpm(self, n_states, seed=None):
         """
@@ -32,7 +33,78 @@ class MarkovGranulizer(Granulizer):
         tpm = np.array(tpm)
         return tpm
     
-    def run(self, y, n_iterations, delta_t, n_grains, window, n_clusters, seed, init_states, grains, dict_clusters):
+    def run_v2(self, y, n_iterations, delta_t, n_streams, window, n_clusters, seed, init_states, grains, dict_clusters):
+        """
+        This functions is similar to v1. For n iterations create clouds of length delta_t. Do this
+        for n streams, each final stream is then added to the final output buffer. 
+        
+        """
+        
+        params = locals().copy()
+        del params["self"]
+        del params["y"]
+        del params["grains"]
+        del params["dict_clusters"]
+        params["init_states"] = [int(i) for i in params["init_states"]]
+        params["window"] = params["window"].__name__
+
+        grain_size = int(grains[1] - grains[0])
+        np.random.seed(seed)
+        n_states = n_clusters * len(self.densities) * len(self.panning)
+        tpm = self.rand_tpm(n_states, seed=seed)
+        # states with possible density, size values
+        states = []
+        clusters = list(range(n_clusters))
+        for i in range(n_clusters):
+            for j in range(len(self.densities)):
+                for k in range(len(self.panning)):
+                    states.append([
+                        clusters[i], self.densities[j], self.panning[k]
+                    ])
+        num_chans = 2
+        curr_states = init_states
+        delta_t_samples = int(delta_t * self.sr)
+        final_output_buffer = np.zeros((num_chans, n_iterations*delta_t_samples)) 
+
+        for stream in range(n_streams):
+            output_buffer = np.array([[],[]]) 
+            for _ in range(n_iterations):
+                temp_buffer = np.zeros((num_chans, delta_t_samples)) # two output channels
+                next_state = np.random.choice(range(n_states), p=tpm[curr_states[stream]])
+                curr_states[stream] = next_state
+                cluster, density, panning = states[next_state][0], states[next_state][1] , states[next_state][2]
+                grain_idx = np.random.choice(dict_clusters[cluster]) 
+                try:
+                    grain_y_idx = grains[grain_idx] # grain index in the original audio array input.wav 
+                except Exception as e:
+                    grain_idx -= 1
+                    grain_y_idx = grains[grain_idx]
+                grain_y_end = grain_y_idx + grain_size
+                if grain_y_end > y.shape[-1]:
+                    grain_y_end = int(y.shape[-1]) 
+                grain = y[grain_y_idx:grain_y_end]
+                if window:
+                    grain = grain * window(len(grain))
+                    
+                for i in range(density):
+                    s = np.random.choice(temp_buffer.shape[-1])
+                    e = s + grain_size
+                    
+                    if e >= temp_buffer.shape[-1]:
+                        e = temp_buffer.shape[-1]
+                    for j in range(num_chans):
+                        temp_buffer[j][s:e] = temp_buffer[j][s:e] + panning[j] * grain[:e-s]
+    
+                # apply screen windowing 
+                if window:
+                    for k in range(num_chans):
+                        temp_buffer[k] = temp_buffer[k] * window(temp_buffer.shape[-1])
+
+                output_buffer = np.concatenate([output_buffer, temp_buffer], axis=1)
+            final_output_buffer = final_output_buffer + output_buffer
+        return final_output_buffer, params
+    
+    def run_v1(self, y, n_iterations, delta_t, n_grains, window, n_clusters, seed, init_states, grains, dict_clusters):
         """
         TBD
         n_states here will be the number clusters * number of densities
@@ -85,7 +157,8 @@ class MarkovGranulizer(Granulizer):
                 # get the density 
                 grain_y_end = grain_y_idx + grain_size
                 if grain_y_end > y.shape[-1]:
-                    grain_y_end = y.shape[-1] # clipping if exceeds input audio bounds
+                    grain_y_end = int(y.shape[-1]) # clipping if exceeds input audio bounds
+                print(grain_y_end)
                 grain = y[grain_y_idx:grain_y_end]
                 
                 # TODO: apply pitch shift?     
@@ -130,6 +203,7 @@ class MarkovGranulizer(Granulizer):
 # grain size, etc. for each channel of the final output audio array.
 
 def async_gs(input_path, output_file_dir, data, grain_indices, 
+             
              sr, cloud_duration, n_streams, 
              max_grain_density, rand_seed=None) -> None:
     """

@@ -36,9 +36,17 @@ def save_output_data(output_data, sr, parametre_dict, output_dir):
     """
     write json metadata and output wav to folders
     """
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    meta_data_path = output_dir + "\metadata"
+    output_data_path = output_dir + "\output"
+    if not os.path.exists(meta_data_path):
+        os.makedirs(meta_data_path) 
+    if not os.path.exists(output_dir):
+        os.makedirs(output_data_path)
     fp_wav, fp_json = get_output_id(parametre_dict)
-    fp_metadata = os.path.join((output_dir + "\metadata"), fp_json)
-    fp_output = os.path.join((output_dir + "\output"), fp_wav)
+    fp_metadata = os.path.join(meta_data_path, fp_json)
+    fp_output = os.path.join(output_data_path, fp_wav)
     with open(fp_metadata, "w") as f:
         json.dump(parametre_dict, f, indent=4)
     sf.write(fp_output, output_data, sr)

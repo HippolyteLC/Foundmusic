@@ -123,6 +123,8 @@ class AnalyzerObject():
         spread = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.spread(spec_arr)))
         skewness = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.skewness(spec_arr)))
         kurtosis = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.kurtosis(spec_arr)))
+        crest = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.crest(spec_arr)))
+        rms = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.rms(spec_arr)))
 
         grain_metadata = []
         for i in range(len(grains)):
@@ -137,22 +139,24 @@ class AnalyzerObject():
             grain_descriptors["spread"] = spread[i]
             grain_descriptors["skewness"] = skewness[i]
             grain_descriptors["kurtosis"] = kurtosis[i]
+            grain_descriptors["crest"] = crest[i]
+            grain_descriptors["rms"] = rms[i]
             grain_descriptors["id"] = get_parametre_hashing(grain_descriptors, hash_length=9)
             grain_metadata.append(grain_descriptors)
         # file_params = {"grain_size": grain_size, "descriptors": list(grain_descriptors.keys())}
         df = pd.DataFrame(grain_metadata)
         # TODO: instead change this to use df.loc for selecting only descriptor columns in the data scaling.
         # indexing_l = [-1, 0, 2, 1].extend(list(range(3, df.shape[-1])))
-        df = df[["id", "sr", "index", "size", "centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis"]] 
+        df = df[["id", "sr", "index", "size", "centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis", "crest", "rms"]] 
         return df
 
-    def save_metadata(self, df):
+    def save_metadata(self, df, grain_duration):
         """
         Save df to csv file of per grain descriptors.
         """
         file_params = df.iloc[-1].to_dict()
         file_name = get_parametre_hashing(file_params, hash_length=8)
-        file_path = os.path.normpath(self.metadata + "\\grain_metadata_" + str(file_name) + ".csv")
+        file_path = os.path.normpath(self.metadata + f"\\grain_{grain_duration}_s_metadata_" + str(file_name) + ".csv")
         df.to_csv(file_path, index=False)
         print(f"Saved to csv to: {file_path}")
 
@@ -163,7 +167,7 @@ class AnalyzerObject():
         df = pd.read_csv(path)
         return df
     
-    def scale_metadata(self, path, scaler: int):
+    def scale_metadata(self, df, scaler: int):
         # TODO: change input, currently does not make sense
         """
         Use StandardScalar class from sklearn to scale data. 
@@ -173,14 +177,14 @@ class AnalyzerObject():
         default params remain the same for scalars. 
         """
         scalers = [StandardScaler, RobustScaler, PowerTransformer]
-        df = self.load_metadata(path)
         df_scaled = df
-        scaler = scalers[scaler]
-        df_descriptors_to_scale = df_scaled[["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis"]]
-        df_scaled[["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis"]] = scaler.fit_transform(df_descriptors_to_scale)
+        scaler = scalers[scaler]()
+        descriptor_list = ["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis", "crest", "rms"]
+        df_descriptors_to_scale = df_scaled[descriptor_list]
+        df_scaled[descriptor_list] = scaler.fit_transform(X=df_descriptors_to_scale)
         return df, df_scaled # return original and scaled df 
     
-    def compute_kmeans(self, path, n_clusters, features=None, scaler=0, n_init=1):
+    def compute_kmeans(self, df_scaled, n_clusters, features=None, n_init=1):
         """
         KMeans algorithm on scaled per grain feature data
         features: a list of strings representing desired analysis features
@@ -188,7 +192,6 @@ class AnalyzerObject():
         n_init: number of runs with different centroid seed
         returns kmeans object
         """
-        _, df_scaled = self.scale_metadata(path)
         if not features:
             features = ["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis"]
             features_scaled = df_scaled[features] # use the columns corresponding to the grain descriptors
@@ -203,6 +206,7 @@ class AnalyzerObject():
         computes kmeans object and writes data to a dictionary. 
         Useful for granular synthesis algorithms that utilize cluster based
         grain sampling.
+        returns a dictionary of grains per cluster id
         """
         if labels is None:
             return 
@@ -218,11 +222,7 @@ class AnalyzerObject():
         """
         if not self.loaded_y:
             self.load_y()
-        try: 
-            grain_size = int(grain_size)
-        except Exception as e:
-            print(f"Exception {e}")
-        # grain_size = int(self.sr*grain_duration)
+            self.loaded_y = True
         n_grains = int(len(self.y)//grain_size)
         grains = [i*grain_size for i in range(n_grains)]
         return grains
@@ -273,7 +273,10 @@ def show_spectrogram(data, sr, y_axis="log", x_axis="time", title=None):
     D = librosa.amplitude_to_db(np.abs(librosa.stft(data)), ref=np.max)
     fig, ax = plt.subplots()
     img = librosa.display.specshow(data=D,y_axis=y_axis, x_axis=x_axis, sr=sr, ax=ax)
-    ax.set(title='Linear-frequency power spectrogram')
+    amplitude_type = "log-frequency"
+    if y_axis == "linear":
+        amplitude_type = "linear-frequency"
+    ax.set(title=f'Linear-frequency {amplitude_type} spectrogram')
     ax.label_outer()
     fig.colorbar(img, ax=ax, format="%+2.f dB")
 
