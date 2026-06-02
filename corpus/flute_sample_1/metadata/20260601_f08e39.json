@@ -1,0 +1,24 @@
+{
+    "n_iterations": 4,
+    "delta_t": 2.8000000000000003,
+    "n_streams": 10,
+    "window": "rev_exp",
+    "n_clusters": 2,
+    "seed": 90,
+    "init_states": [
+        11,
+        13,
+        2,
+        3,
+        7,
+        4,
+        10,
+        5,
+        2,
+        10
+    ],
+    "features": [
+        "rolloff",
+        "crest"
+    ]
+}

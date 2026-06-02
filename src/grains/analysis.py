@@ -13,7 +13,8 @@ import os
 from sklearn.preprocessing import StandardScaler, RobustScaler, PowerTransformer
 
 ### TODO: add dynamic slicing back in
-
+### TODO: add class for further grain analysis all input-grains pairs in PCA 3-dim space
+### TODO: add method for computing histograms, means, and stds of grains 
 
 ### Class using AudioFlux below
 # --------------------------------------------------------------------------#
@@ -97,6 +98,7 @@ class AnalyzerObject():
         Input descriptor arr contains per sample values.
         """
         print(f"Length y: {len(self.y)} Length descr y: {len(descriptor_arr)}")
+        
         grain_mean_descr = []
         n_grains = int(len(descriptor_arr)//grain_size)
         for i in range(n_grains):
@@ -112,6 +114,7 @@ class AnalyzerObject():
         list of dict to df of per grain features.
         df shape: (n_samples, n_features)
         """
+
         spec_arr, spectral_obj = self.get_spectral_arr(num_freq_bins, radix_exp)
         # grain_size = int(self.sr*grain_duration)
         n_grains = int(len(self.y)//grain_size)
@@ -125,7 +128,7 @@ class AnalyzerObject():
         kurtosis = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.kurtosis(spec_arr)))
         crest = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.crest(spec_arr)))
         rms = self.get_grain_descriptors(grain_size, self.convert_descriptor_arr(spectral_obj.rms(spec_arr)))
-
+        # TODO: add print statement for loop
         grain_metadata = []
         for i in range(len(grains)):
             grain_descriptors = {}
@@ -226,7 +229,35 @@ class AnalyzerObject():
         n_grains = int(len(self.y)//grain_size)
         grains = [i*grain_size for i in range(n_grains)]
         return grains
+import seaborn as sns
 
+class GrainAnalysis():
+    def __init__(self, dir, sr):
+        self.dir = dir
+        self.sr = sr
+
+    def get_single_histogram(self, df_scaled, descriptor, n_bins):
+        """
+        Takes a single descriptor and returns a single histogram
+        """
+        fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=False)
+        fig.suptitle('Approach 1: Individual Feature Histograms (Independent X-Axes)', fontsize=14, fontweight='bold')
+        descriptor_list = ["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis", "crest", "rms"]
+        df_analysis_cols = df_scaled[descriptor_list]
+        for i, col in enumerate(df_analysis_cols.columns):
+            sns.histplot(
+                data=df_analysis_cols, 
+                x=col, 
+                kde=True, 
+                ax=axes[i], 
+                color=sns.color_palette("muted")[i],
+                bins=n_bins
+            )
+            axes[i].set_title(f'{col} Distribution')
+            axes[i].set_xlabel('Scaled Value')
+        plt.title(f"Grain distribution for {descriptor}")
+        plt.tight_layout()
+        plt.show()
 
 
 ### OBSOLETE FUNCTIONS
@@ -276,11 +307,67 @@ def show_spectrogram(data, sr, y_axis="log", x_axis="time", title=None):
     amplitude_type = "log-frequency"
     if y_axis == "linear":
         amplitude_type = "linear-frequency"
-    ax.set(title=f'Linear-frequency {amplitude_type} spectrogram')
+    ax.set(title=f'{amplitude_type} spectrogram')
     ax.label_outer()
     fig.colorbar(img, ax=ax, format="%+2.f dB")
 
+    def plot_flexible_histograms(self, df, features, grain_duration, n_cols=3, color='steelblue', n_bins=30):
+        """
+        Plots histograms for all columns in a DataFrame into a grid with a fixed number of columns.
+        - df: pandas DataFrame containing the scaled features (RobustScaling is best: index 1 for the scaler method
+        from AnalyzerObject)
+        - n_cols: int, number of columns in the subplot grid
+        - color: str, color for all histograms
+        - bins: int, number of bins for the histograms
+        saves to figures 
+        """
+        
+        df = df[features]# consider only descriptors
+        feature_names = df.columns
+        n_features = len(feature_names)
+        n_rows = int(np.ceil(n_features / n_cols))
+        
+        fig, axes = plt.subplots(
+            n_rows, 
+            n_cols, 
+            figsize=(n_cols * 4, n_rows * 3.5), 
+            sharex=False, 
+            sharey=False
+        )
+        axes_flat = axes.flatten()
+        
+        for i, col in enumerate(feature_names):
+            sns.histplot(
+                data=df, 
+                x=col, 
+                kde=False, # True for a fitted line     
+                ax=axes_flat[i], 
+                color=color,     
+                bins=n_bins
+            )
+            axes_flat[i].set_title(f'{col} '.capitalize() + 'distribution', fontsize=11, fontweight='bold')
+            
+            if i % n_cols == 0: 
+                axes_flat[i].set_ylabel('Grain count')
+            else:
+                axes_flat[i].set_ylabel('')
 
+            if (i+n_cols) // (n_rows * n_cols) == 1:
+                axes_flat[i].xaxis.get_label().set_text('Scaled descriptor value')
+            else:
+                axes_flat[i].xaxis.get_label().set_text('')
+
+        # If the number of features doesn't perfectly fill the last row, delete the empty axes
+        for j in range(i + 1, len(axes_flat)):
+            fig.delaxes(axes_flat[j])
+            
+        plt.tight_layout()
+        output_dir = os.path.normpath(self.dir + "\\figures\\")
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        output_path = os.path.join(output_dir, f'hist_{n_bins}_bins_grain_dur_{grain_duration}_s' + '.png')
+        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.close()
 
 class Analyzer():
     """
