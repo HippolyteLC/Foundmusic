@@ -11,6 +11,12 @@ import csv
 import pandas as pd
 import os
 from sklearn.preprocessing import StandardScaler, RobustScaler, PowerTransformer
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
 
 ### TODO: add dynamic slicing back in
 ### TODO: add class for further grain analysis all input-grains pairs in PCA 3-dim space
@@ -229,36 +235,6 @@ class AnalyzerObject():
         n_grains = int(len(self.y)//grain_size)
         grains = [i*grain_size for i in range(n_grains)]
         return grains
-import seaborn as sns
-
-class GrainAnalysis():
-    def __init__(self, dir, sr):
-        self.dir = dir
-        self.sr = sr
-
-    def get_single_histogram(self, df_scaled, descriptor, n_bins):
-        """
-        Takes a single descriptor and returns a single histogram
-        """
-        fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=False)
-        fig.suptitle('Approach 1: Individual Feature Histograms (Independent X-Axes)', fontsize=14, fontweight='bold')
-        descriptor_list = ["centroid", "flux", "rolloff", "flatness", "spread", "skewness", "kurtosis", "crest", "rms"]
-        df_analysis_cols = df_scaled[descriptor_list]
-        for i, col in enumerate(df_analysis_cols.columns):
-            sns.histplot(
-                data=df_analysis_cols, 
-                x=col, 
-                kde=True, 
-                ax=axes[i], 
-                color=sns.color_palette("muted")[i],
-                bins=n_bins
-            )
-            axes[i].set_title(f'{col} Distribution')
-            axes[i].set_xlabel('Scaled Value')
-        plt.title(f"Grain distribution for {descriptor}")
-        plt.tight_layout()
-        plt.show()
-
 
 ### OBSOLETE FUNCTIONS
 
@@ -311,7 +287,7 @@ def show_spectrogram(data, sr, y_axis="log", x_axis="time", title=None):
     ax.label_outer()
     fig.colorbar(img, ax=ax, format="%+2.f dB")
 
-def plot_grain_distr_histograms(self, df, features, grain_duration, n_cols=3, color='steelblue', n_bins=30):
+def get_grain_distr_histograms(self, df, features, grain_duration, n_cols=3, color='steelblue', n_bins=30):
     """
     Plots histograms for all columns in a DataFrame into a grid with a fixed number of columns.
     - df: pandas DataFrame containing the scaled features (RobustScaling is best: index 1 for the scaler method
@@ -335,7 +311,11 @@ def plot_grain_distr_histograms(self, df, features, grain_duration, n_cols=3, co
         sharex=False, 
         sharey=False
     )
-    axes_flat = axes.flatten()
+
+    if n_features == 1: #handle 1d arr
+        axes_flat = np.array([axes])
+    else:
+        axes_flat = axes.flatten()
     
     for i, col in enumerate(feature_names):
         sns.histplot(
