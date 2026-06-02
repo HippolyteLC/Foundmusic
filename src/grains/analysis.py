@@ -316,6 +316,7 @@ def show_spectrogram(data, sr, y_axis="log", x_axis="time", title=None):
         Plots histograms for all columns in a DataFrame into a grid with a fixed number of columns.
         - df: pandas DataFrame containing the scaled features (RobustScaling is best: index 1 for the scaler method
         from AnalyzerObject)
+        - features: the descriptor columns that should be included in the histograms
         - n_cols: int, number of columns in the subplot grid
         - color: str, color for all histograms
         - bins: int, number of bins for the histograms
