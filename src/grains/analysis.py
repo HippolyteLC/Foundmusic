@@ -36,10 +36,9 @@ class AnalyzerObject():
         self.sr=sr
         self.input_path = os.path.normpath(path + "\\input.wav")
         self.metadata = os.path.normpath(path + "\\metadata")
+        # self.figures = os.path.normpath(path + "\\figures")
         self.y = None
-        self.stft = None
         self.loaded_y=False
-        self.loaded_stft=False
 
     def load_y(self):
         """
@@ -51,7 +50,8 @@ class AnalyzerObject():
             self.loaded_y = True
         except ValueError as e:
             y, _ = librosa.load(path=self.input_path, sr=self.sr)
-
+            self.y = y
+            self.loaded_y = True
     def get_spectral_arr(self, num_freq_bins=1025, radix_exp=11, grain_size=None):
         """
         Each frame corresponds to a grain due to slide_length=grain_size. 
@@ -169,6 +169,8 @@ class AnalyzerObject():
         file_params = df.iloc[-1].to_dict()
         file_name = get_parametre_hashing(file_params, hash_length=8)
         file_path = os.path.normpath(self.metadata + f"\\grain_{grain_duration}_s_metadata_" + str(file_name) + ".csv")
+        if not os.path.exists(self.metadata):
+            os.makedirs(self.metadata)        
         df.to_csv(file_path, index=False)
         print(f"Saved to csv to: {file_path}")
 
@@ -290,7 +292,7 @@ def show_spectrogram(data, sr, y_axis="log", x_axis="time", title=None):
     ax.label_outer()
     fig.colorbar(img, ax=ax, format="%+2.f dB")
 
-def get_grain_distr_histograms(self, df, features, grain_duration, n_cols=3, color='steelblue', n_bins=30):
+def get_grain_distr_histograms(dir, df, features, grain_duration, n_cols=3, color='steelblue', n_bins=30):
     """
     Plots histograms for all columns in a DataFrame into a grid with a fixed number of columns.
     - df: pandas DataFrame containing the scaled features (RobustScaling is best: index 1 for the scaler method
@@ -346,7 +348,7 @@ def get_grain_distr_histograms(self, df, features, grain_duration, n_cols=3, col
         fig.delaxes(axes_flat[j])
         
     plt.tight_layout()
-    output_dir = os.path.normpath(self.dir + "\\figures\\")
+    output_dir = os.path.normpath(dir + "\\figures\\")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     output_path = os.path.join(output_dir, f'hist_{n_bins}_bins_grain_dur_{grain_duration}_s' + '.png')

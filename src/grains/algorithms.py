@@ -83,8 +83,6 @@ class MarkovGranulizer(Granulizer):
                 if grain_y_end > y.shape[-1]:
                     grain_y_end = int(y.shape[-1]) 
                 grain = y[grain_y_idx:grain_y_end]
-                if window:
-                    grain = grain * window(len(grain))
                     
                 for i in range(density):
                     s = np.random.choice(temp_buffer.shape[-1])
@@ -92,13 +90,15 @@ class MarkovGranulizer(Granulizer):
                     
                     if e >= temp_buffer.shape[-1]:
                         e = temp_buffer.shape[-1]
+                    grain_slice = grain[:e-s]
+                    grain_slice = grain_slice * window(len(grain_slice))
                     for j in range(num_chans):
-                        temp_buffer[j][s:e] = temp_buffer[j][s:e] + panning[j] * grain[:e-s]
+                        temp_buffer[j][s:e] = temp_buffer[j][s:e] + panning[j] * grain_slice
     
                 # apply screen windowing 
-                if window:
-                    for k in range(num_chans):
-                        temp_buffer[k] = temp_buffer[k] * window(temp_buffer.shape[-1])
+                # if window:
+                #     for k in range(num_chans):
+                #         temp_buffer[k] = temp_buffer[k] * window(temp_buffer.shape[-1])
 
                 output_buffer = np.concatenate([output_buffer, temp_buffer], axis=1)
             final_output_buffer = final_output_buffer + output_buffer
