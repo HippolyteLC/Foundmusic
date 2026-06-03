@@ -9,6 +9,8 @@ def rev_exp(size, decay_r=1):
     normalized_window = (window - window[-1])/(window[0]-window[-1])
     return normalized_window
 
+# TODO: write exp envelope
+
 def normalize_output(data):
     """
     Use max normalization for outputs to avoid clipping.

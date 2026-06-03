@@ -134,7 +134,7 @@ class MarkovGranulizer(Granulizer):
                 #         temp_buffer[k] = temp_buffer[k] * window(temp_buffer.shape[-1])
 
                 output_buffer = np.concatenate([output_buffer, temp_buffer], axis=1)
-            final_output_buffer = final_output_buffer + output_buffer
+            final_output_buffer = normalize_output(final_output_buffer + output_buffer)
             markov_chain_tracking.append(markov_chain_tracking_stream)
         return final_output_buffer, markov_chain_tracking, params
 
