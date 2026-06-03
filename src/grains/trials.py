@@ -1,6 +1,7 @@
 import numpy as np
-from algorithms import MarkovGranulizer
+from algorithms import MarkovGranulizer, rand_tpm
 from analysis import AnalyzerObject
+from helpers import rev_exp
 
 # Set the seeds
 
@@ -28,6 +29,7 @@ for i in range(N_CONFIGURATIONS):
             'config_seed':           config_seed,  
             'state_sampling_seed':   state_sampling_seeds[j],
             'cluster_sampling_seed': cluster_sampling_seeds[j]
+            'grain_position_sampling_seeds': grain_position_sampling_seeds[j]
         })
 
 # Do the analysis of grains in a NB to visualize and choose descriptors
@@ -40,16 +42,62 @@ grain_duration = 0.1 # 100 ms
 grain_size = int(SR*grain_duration)
 df = analyzer.compute_grain_descriptors(grain_size)
 analyzer.save_metadata(df, grain_duration=grain_duration)
-METADATA_PATH = "..\..\corpus\\flute_sample_1\metadata\grain_0.14_s_metadata_e118eb9b.csv" 
-df = analyzer.load_metadata(metadata_path)
 _, df_scaled = analyzer.scale_metadata(df, scaler=2)
 x = "rolloff"
 y = "crest"
 features = [x,y]
-# df
+
+
+# Set the parametre value ranges
+
+grains = analyzer.grains()
+n_streams_arr = [1,2,4,16]
+windows = [np.hanning, rev_exp] # add exp
+density_arrays = [
+    [1, 2, 4]
+    [10, 20, 40],
+    [100, 200, 400]
+]
+grain_sizes = [
+    [1, 10, 20],
+    [40, 60, 100]
+]
+n_clusters_arr = [2, 3, 5, 8]
+
+granulator = MarkovGranulizer(sr=SR, grain_size=grain_size)
+
+
 # Do the trial runs
 
 for trial in range(N_CONFIGURATIONS):
+    config_seed = trials[trial]["config_seed"]
+    param_config_rng = np.random.default_rng(config_seed)
+   
+    n_clusters = param_config_rng.choice(n_clusters_arr) 
+    kmeans_obj = analyzer.compute_kmeans(df_scaled, n_clusters=n_clusters, features=features)
+    dict_clusters, _ = analyzer.get_cluster_dict(kmeans_obj.labels_)
+    
+    n_states = len(grain_sizes) * len(densities) * n_clusters
+    
 
+    # randomize params per trial
+    tpm = rand_tpm(n_states, config_seed)
+    init_states = [param_config_rng.randint(0, n_states) for _ in range(n_streams)]
+    densities = [param_config_rng.choice(i) for i in density_arrays]
+    window = param_config_rng.choice(windows)
+    n_streams = param_config_rng.choice(n_streams_arr)
 
-
+    for rep in range(K_REPETITIONS):
+        
+        granulator.run_v3(
+            y=analyzer.y,
+            densities=densities,
+            grain_sizes=grain_sizes,
+            init_states=init_states,
+            tpm=tpm,
+            dict_clusters=dict_clusters,
+            grains=grains,
+            seed_grain_sampling=trials[rep]["grain_sampling_seed"],
+            seed_state_sampling=trials[rep]["state_sampling_seed"],
+            seed_grain_pos_sampling=trials[rep]["grain_pos_sampling_seed"],
+        )

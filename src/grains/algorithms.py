@@ -7,6 +7,31 @@ class Granulizer():
         self.sr = sr
         pass
 
+def rand_tpm(n_states, config_seed=None):
+    """
+    Requires own seed if run in experimental trials. 
+
+    Returns a transition probability matrix (tpm) of 
+    n_states x n_states. 
+
+    Example usage 1) 
+    If you have 3 clusters for grain waveform selection you 
+    can input the n_clusters variable from the Analyzer class into
+    this method to generate an according random tpm. 
+    """
+    if not config_seed:
+        return
+    
+    # Part of the config random sampling 
+    config_rng = np.random.default_rng(config_seed)
+    random_tpm = config_rng.rand(n_states,n_states)
+    tpm = []
+    for i in random_tpm:
+        row = i / np.sum(i)
+        tpm.append(row)
+    tpm = np.array(tpm)
+    return tpm
+
 class MarkovGranulizer(Granulizer):
     def __init__(self, sr, grain_size, densities=None, panning=[(1,1)], grain_sizes=None):
         # TODO: add second granular parametre option
@@ -41,7 +66,7 @@ class MarkovGranulizer(Granulizer):
         tpm = np.array(tpm)
         return tpm
     
-    def run_v3(self, y, init_states, tpm, grains, dict_clusters,
+    def run_v3(self, y, densities, grain_sizes, init_states, tpm, grains, dict_clusters,
                 seed_grain_sampling, seed_state_sampling, 
                 seed_grain_pos_sampling, n_iterations=20, delta_t=None, 
                 n_streams=1, window=np.hanning, n_clusters=2):
@@ -62,17 +87,18 @@ class MarkovGranulizer(Granulizer):
         params["window"] = params["window"].__name__
 
         grain_size = int(grains[1] - grains[0])
-        n_states = n_clusters * len(self.densities) * len(self.panning)
+        n_states = n_clusters * len(self.densities) * len(self.grain_sizes)
         
         # states with possible density, size values
         states = []
         clusters = list(range(n_clusters))
         for i in range(n_clusters):
             for j in range(len(self.densities)):
-                for k in range(len(self.panning)):
+                for k in range(len(self.grain_sizes)):
                     states.append([
-                        clusters[i], self.densities[j], self.panning[k]
+                        clusters[i], self.densities[j], self.grain_sizes[k]
                     ])
+
         num_chans = 1 # mono output to avoid panning influence in spectral output (not an coustic param)
         curr_states = init_states
         delta_t_samples = int(delta_t * self.sr)
@@ -126,7 +152,7 @@ class MarkovGranulizer(Granulizer):
                     grain_slice = grain[:e-s]
                     grain_slice = grain_slice * window(len(grain_slice))
                     for j in range(num_chans):
-                        temp_buffer[j][s:e] = temp_buffer[j][s:e] + panning[j] * grain_slice
+                        temp_buffer[j][s:e] = temp_buffer[j][s:e] + grain_slice
     
                 # apply screen windowing 
                 # if window:
