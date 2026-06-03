@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import scipy
 
 
 ### TODO: add dynamic slicing back in
@@ -45,9 +45,12 @@ class AnalyzerObject():
         """
         load the audio array
         """
-        y, _ = af.read(path=self.input_path, samplate=self.sr)
-        self.y = y
-        self.loaded_y = True
+        try:
+            y, _ = af.read(path=self.input_path, samplate=self.sr)
+            self.y = y
+            self.loaded_y = True
+        except ValueError as e:
+            y, _ = librosa.load(path=self.input_path, sr=self.sr)
 
     def get_spectral_arr(self, num_freq_bins=1025, radix_exp=11, grain_size=None):
         """
@@ -392,8 +395,12 @@ class Analyzer():
         self.stft = np.abs(stft)
 
     def load_audio_data(self):
-        y, _ = af.read(path=self.input_path, samplate=self.sr)
-        self.y = y
+        try: 
+            y, _ = af.read(path=self.input_path, samplate=self.sr)
+            self.y = y
+        except ValueError as e:
+            print(e)
+
     
     def compute_zrc(self, n_fft=2048, hop_length=512):
         """ 
