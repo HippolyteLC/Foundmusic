@@ -5,6 +5,7 @@ from helpers import rev_exp
 import writing
 import json 
 import os
+from datetime import datetime
 
 # Set the seeds
 
@@ -39,6 +40,12 @@ for i in range(N_CONFIGURATIONS):
 
 PATH =  "..\..\corpus\\pilot_trial_1"
 SR = 48000
+time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+trial_dir = os.path.normpath(PATH + f"\\trial_data\\")
+trial_path = os.path.normpath(PATH + f"\\trial_data\\{time}_trial.json")
+if not os.path.exists(trial_dir):
+    os.makedirs(trial_dir)
+
 analyzer = AnalyzerObject(PATH, SR)
 analyzer.load_y()
 grain_duration = 0.1 # 100 ms
@@ -116,14 +123,24 @@ for trial in range(N_CONFIGURATIONS):
         params["flux_arr"] = flux_arr.tolist()
         params["markov_chains"] = markchains
 
-        # TODO: save every 10th output
-        if trial % 10:
+        # Logging + saving output data
+        if trial % 10 == 0:
             writing.save_output_data(
                 output_data=audio_arr,
                 sr=SR,
                 parametre_dict=params,
                 output_dir=PATH
                 )
-        trial_data_path = os.path.normpath(PATH + "\\trial_data")
-        if not os.path.exists
-        
+            
+        if os.path.exists(trial_path):
+            with open(trial_path, 'r') as f:
+                all_trials = json.load(f)
+        else:
+            all_trials = [] 
+
+        all_trials.append(params)
+
+        with open(trial_path, 'w') as f:
+            json.dump(all_trials, f) 
+
+        print(f'saved trial {trial_id}')
