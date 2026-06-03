@@ -31,7 +31,7 @@ class AnalyzerObject():
     Conversion of these window values to the grain descriptor values is included
     """
 
-    def __init__(self, path, sr):
+    def __init__(self, path=None, sr=48000):
         self.path = path
         self.sr=sr
         self.input_path = os.path.normpath(path + "\\input.wav")
@@ -52,7 +52,7 @@ class AnalyzerObject():
             y, _ = librosa.load(path=self.input_path, sr=self.sr)
             self.y = y
             self.loaded_y = True
-    def get_spectral_arr(self, num_freq_bins=1025, radix_exp=11, grain_size=None):
+    def get_spectral_arr(self, y=None, num_freq_bins=1025, radix_exp=11, grain_size=None):
         """
         Each frame corresponds to a grain due to slide_length=grain_size. 
         The other parametres are set to default analysis values. 
@@ -65,14 +65,18 @@ class AnalyzerObject():
         """
         # TODO: add dynamic num_f and fft_size srtting based on grain size
 
-        if not self.loaded_y:
+
+        if y is not None:
+            audio_arr = y   
+        elif not self.loaded_y:
             self.load_y()
             self.loaded_y = True
-       
+            audio_arr = self.y
+
         bft_obj = af.BFT(num=num_freq_bins, samplate=self.sr, radix2_exp=radix_exp, 
             data_type=af.type.SpectralDataType.MAG,
             scale_type=af.type.SpectralFilterBankScaleType.LINEAR)       
-        spec_arr = bft_obj.bft(self.y)
+        spec_arr = bft_obj.bft(audio_arr)
         spec_arr = np.abs(spec_arr)
         spectral_obj = af.Spectral(num=bft_obj.num,
                                 fre_band_arr=bft_obj.get_fre_band_arr())

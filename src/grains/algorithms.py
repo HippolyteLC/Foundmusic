@@ -77,14 +77,6 @@ class MarkovGranulizer(Granulizer):
         """
         if delta_t is None:
             delta_t = self.grain_size * 10
-        ### param saving for metadata
-        params = locals().copy()
-        del params["self"]
-        del params["y"]
-        del params["grains"]
-        del params["dict_clusters"]
-        params["init_states"] = [int(i) for i in params["init_states"]]
-        params["window"] = params["window"].__name__
 
         grain_size = int(grains[1] - grains[0])
         n_states = n_clusters * len(self.densities) * len(self.grain_sizes)
@@ -93,18 +85,29 @@ class MarkovGranulizer(Granulizer):
         states = []
         clusters = list(range(n_clusters))
         for i in range(n_clusters):
-            for j in range(len(self.densities)):
-                for k in range(len(self.grain_sizes)):
+            for j in range(len(densities)):
+                for k in range(len(grain_sizes)):
                     states.append([
-                        clusters[i], self.densities[j], self.grain_sizes[k]
+                        clusters[i], densities[j], grain_sizes[k]
                     ])
+
+        ### param saving for metadata
+        params = locals().copy()
+        del params["self"]
+        del params["y"]
+        del params["grains"]
+        del params["dict_clusters"]
+        del params["clusters"]
+        params["init_states"] = [int(i) for i in params["init_states"]]
+        params["window"] = params["window"].__name__
+
 
         num_chans = 1 # mono output to avoid panning influence in spectral output (not an coustic param)
         curr_states = init_states
         delta_t_samples = int(delta_t * self.sr)
         final_output_buffer = np.zeros((num_chans, n_iterations*delta_t_samples)) 
 
-        markov_chain_tracking = []
+        markov_chains_tracking = []
 
         for stream in range(n_streams):
             output_buffer = np.array([]) 
@@ -161,8 +164,8 @@ class MarkovGranulizer(Granulizer):
 
                 output_buffer = np.concatenate([output_buffer, temp_buffer], axis=1)
             final_output_buffer = normalize_output(final_output_buffer + output_buffer)
-            markov_chain_tracking.append(markov_chain_tracking_stream)
-        return final_output_buffer, markov_chain_tracking, params
+            markov_chains_tracking.append(markov_chain_tracking_stream)
+        return final_output_buffer, markov_chains_tracking, params
 
     def run_v2(self, y, n_iterations, delta_t, n_streams, window, n_clusters, seed, init_states, grains, dict_clusters):
         """

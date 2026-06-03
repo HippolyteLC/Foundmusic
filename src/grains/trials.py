@@ -2,6 +2,9 @@ import numpy as np
 from algorithms import MarkovGranulizer, rand_tpm
 from analysis import AnalyzerObject
 from helpers import rev_exp
+import writing
+import json 
+import os
 
 # Set the seeds
 
@@ -34,9 +37,9 @@ for i in range(N_CONFIGURATIONS):
 
 # Do the analysis of grains in a NB to visualize and choose descriptors
 
-INPUT_PATH =  "..\..\corpus\\pilot_trial_1"
+PATH =  "..\..\corpus\\pilot_trial_1"
 SR = 48000
-analyzer = AnalyzerObject(INPUT_PATH, SR)
+analyzer = AnalyzerObject(PATH, SR)
 analyzer.load_y()
 grain_duration = 0.1 # 100 ms
 grain_size = int(SR*grain_duration)
@@ -66,7 +69,6 @@ n_clusters_arr = [2, 3, 5, 8]
 
 granulator = MarkovGranulizer(sr=SR, grain_size=grain_size)
 
-
 # Do the trial runs
 
 for trial in range(N_CONFIGURATIONS):
@@ -88,8 +90,8 @@ for trial in range(N_CONFIGURATIONS):
     n_streams = param_config_rng.choice(n_streams_arr)
 
     for rep in range(K_REPETITIONS):
-        
-        granulator.run_v3(
+
+        audio_arr, markchains, params = granulator.run_v3(
             y=analyzer.y,
             densities=densities,
             grain_sizes=grain_sizes,
@@ -101,3 +103,27 @@ for trial in range(N_CONFIGURATIONS):
             seed_state_sampling=trials[rep]["state_sampling_seed"],
             seed_grain_pos_sampling=trials[rep]["grain_pos_sampling_seed"],
         )
+        output_analyzer = AnalyzerObject(PATH, SR)
+        spec_arr, spectral_obj = output_analyzer.get_spectral_arr(y=audio_arr)
+        centroid_arr = spectral_obj.centroid(spec_arr)
+        flux_arr = spectral_obj.flux(spec_arr)
+        trial_id = trials[trial]["config_id"]
+        repetition_id = trials[trial]["rep_id"]
+
+        params["trial_id"] = trial_id
+        params["rep_id"] = repetition_id
+        params["centroid_arr"] = centroid_arr.tolist()
+        params["flux_arr"] = flux_arr.tolist()
+        params["markov_chains"] = markchains
+
+        # TODO: save every 10th output
+        if trial % 10:
+            writing.save_output_data(
+                output_data=audio_arr,
+                sr=SR,
+                parametre_dict=params,
+                output_dir=PATH
+                )
+        trial_data_path = os.path.normpath(PATH + "\\trial_data")
+        if not os.path.exists
+        
