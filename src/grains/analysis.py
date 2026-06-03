@@ -173,6 +173,7 @@ class AnalyzerObject():
             os.makedirs(self.metadata)        
         df.to_csv(file_path, index=False)
         print(f"Saved to csv to: {file_path}")
+        return file_path
 
     def load_metadata(self, path):
         """
