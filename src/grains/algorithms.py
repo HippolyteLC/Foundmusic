@@ -33,13 +33,14 @@ def rand_tpm(n_states, config_seed=None):
     return tpm
 
 class MarkovGranulizer(Granulizer):
-    def __init__(self, sr=48000, grain_size=100, densities=None, panning=[(1,1)], grain_sizes=None):
+    def __init__(self, sr=48000, grain_duration=0.1, densities=None, panning=[(1,1)], grain_sizes=None):
         # TODO: add second granular parametre option
         super().__init__(sr)
         self.densities = densities
         self.panning = panning 
         self.grain_sizes = grain_sizes
-        self.grain_size = grain_size
+        # self.grain_size = sr*grain_duration
+
         
     def _rand_tpm(self, n_states, config_seed=None):
         """
@@ -66,21 +67,25 @@ class MarkovGranulizer(Granulizer):
         tpm = np.array(tpm)
         return tpm
     
-    def run_v3(self, y, densities, grain_sizes, init_states, tpm, grains, dict_clusters,
-                seed_grain_sampling, seed_state_sampling, 
-                seed_grain_pos_sampling, n_streams=1, window=np.hanning, n_clusters=2,
-                n_iterations=20, delta_t_samples=None):
+    def run_v3(self, y, densities, grain_size, grains, 
+               grain_sizes, tpm, dict_clusters, config_seed,
+            seed_grain_sampling=1, seed_state_sampling=1, 
+            seed_grain_pos_sampling=1, n_streams=10, window=np.hanning, 
+            n_clusters=2, n_iterations=20, delta_t_samples=None):
         """
         This functions is similar to v1. For n iterations create clouds of length delta_t. Do this
         for n streams, each final stream is then added to the final output buffer. 
         Now input TPM so that I can separate seed 
         """
         if delta_t_samples is None:
-            delta_t_samples = self.grain_size * 10
+            delta_t_samples = grain_size * 10
 
-        grain_size = int(grains[1] - grains[0])
         n_states = n_clusters * len(densities) * len(grain_sizes)
-        
+        config_rng = np.random.default_rng(config_seed)
+        init_states = [int(config_rng.integers(0, n_states)) for _ in range(n_streams)]
+
+        assert grain_size == grains[1] - grains[0]
+
         # states with possible density, size values
         states = []
         clusters = list(range(n_clusters))
@@ -101,39 +106,40 @@ class MarkovGranulizer(Granulizer):
         del params["grains"]
         del params["dict_clusters"]
         del params["clusters"]
+        del params["config_rng"]
         params["tpm"] = [[float(j) for j in i] for i in params["tpm"]]
-        # params["n_streams"] = int(params["n_streams"])
         params["init_states"] = [int(i) for i in params["init_states"]]
         params["window"] = str(params["window"].__name__)
 
-
-        num_chans = 1 # mono output to avoid panning influence in spectral output (not an coustic param)
         curr_states = init_states
-        final_output_buffer = np.zeros((num_chans, n_iterations*delta_t_samples)) 
+        final_output_buffer = np.zeros(n_iterations*delta_t_samples) 
         markov_chains_tracking = []
+
+        # this sampling process needs its own seed
+        state_sampling_rng = np.random.default_rng(seed_state_sampling)
+
+        # this sampling process needs its own seed (not trial seed)
+        grain_sampling_rng = np.random.default_rng(seed_grain_sampling)
+        
+        # this sampling process needs its own seed
+        grain_pos_sampling_rng = np.random.default_rng(seed_grain_pos_sampling)      
 
         for stream in range(n_streams):
             output_buffer = np.array([]) 
-            next_state = curr_states[stream]
-            markov_chain_tracking_stream = [next_state]
+            curr_state = curr_states[stream]
+            markov_chain_tracking_stream = [curr_state]
 
             for _ in range(n_iterations):
 
-                temp_buffer = np.zeros((num_chans, delta_t_samples)) # two output channels
+                temp_buffer = np.zeros(delta_t_samples) # two output channels
                 
                 # maybe keep fixed grain duration? 
-                cluster, density, grain_size_change = states[next_state][0], states[next_state][1] , states[next_state][2]
+                cluster, density, grain_size_change = states[curr_state][0], states[curr_state][1] , states[curr_state][2]
                 
-                # this sampling process needs its own seed
-                state_sampling_rng = np.random.default_rng(seed_state_sampling)
-                # print(tpm[curr_states[stream]])
-                # print(list(range(n_states)))
-                next_state = state_sampling_rng.choice(range(n_states), p=tpm[curr_states[stream]])
-                curr_states[stream] = next_state
+                next_state = state_sampling_rng.choice(range(n_states), p=tpm[curr_state])
+                curr_state = next_state
                 markov_chain_tracking_stream.append(next_state)
 
-                # this sampling process needs its own seed (not trial seed)
-                grain_sampling_rng = np.random.default_rng(seed_grain_sampling)
                 grain_idx = grain_sampling_rng.choice(dict_clusters[cluster]) 
                 try:
                     grain_y_idx = grains[grain_idx] # grain index in the original audio array input.wav 
@@ -147,32 +153,36 @@ class MarkovGranulizer(Granulizer):
                 
                 # add filler so that the shorter grain is sampled from the middle of the original grain
                 filler = int((len(grain)-grain_size_change)//2)
-                grain = grain[filler:grain_size_change+filler]
-                grain_size = len(grain)
+                new_grain = grain[filler:-filler]
+                new_grain_size = len(new_grain)
+                print("New grain size:", new_grain_size)
                     
                 for i in range(density):
-                    # this sampling process needs its own seed
-                    grain_pos_sampling_rng = np.random.default_rng(seed_grain_pos_sampling)
                     s = grain_pos_sampling_rng.choice(temp_buffer.shape[-1])
-                    e = s + grain_size
+                    e = s + new_grain_size
                     
                     if e >= temp_buffer.shape[-1]:
                         e = temp_buffer.shape[-1]
-                    grain_slice = grain[:e-s]
+                    grain_slice = new_grain[:e-s]
+                    print(grain_slice.shape)
                     grain_slice = grain_slice * window(len(grain_slice))
-                    for j in range(num_chans):
-                        temp_buffer[j][s:e] = temp_buffer[j][s:e] + grain_slice
-    
+                    # for j in range(num_chans):
+                    #     temp_buffer[j][s:e] = temp_buffer[j][s:e] + grain_slice
+                    temp_buffer[s:e] = temp_buffer[s:e] + grain_slice
+
                 # apply screen windowing 
                 # if window:
                 #     for k in range(num_chans):
                 #         temp_buffer[k] = temp_buffer[k] * window(temp_buffer.shape[-1])
 
                 # output_buffer = np.concatenate([output_buffer, temp_buffer], axis=1) # only for multi channel
-                # print(output_buffer.shape, temp_buffer.shape)
-                output_buffer = np.concatenate([output_buffer, temp_buffer[0]], axis=0) # only for multi channel
-            final_output_buffer = normalize_output(final_output_buffer + output_buffer)
+                print(output_buffer.shape, temp_buffer.shape)
+                output_buffer = np.concatenate([output_buffer, temp_buffer])
+
+            final_output_buffer = final_output_buffer + output_buffer
             markov_chains_tracking.append(markov_chain_tracking_stream)
+
+        final_output_buffer = normalize_output(final_output_buffer)
         return final_output_buffer, markov_chains_tracking, params
 
     def run_v2(self, y, n_iterations, delta_t, n_streams, window, n_clusters, seed, init_states, grains, dict_clusters):

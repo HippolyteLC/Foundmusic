@@ -52,7 +52,7 @@ def save_output_data(output_data, sr, parametre_dict, output_dir):
         json.dump(parametre_dict, f, indent=4)
     if not output_data is None:
         # print(output_data.shape[0])
-        sf.write(file=fp_output, data=output_data[0], samplerate=sr)
+        sf.write(file=fp_output, data=output_data, samplerate=sr)
 
 
 

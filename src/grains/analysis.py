@@ -236,7 +236,7 @@ class AnalyzerObject():
         for idx, lab in enumerate(labels):
             dict_clusters[lab] = dict_clusters.get(lab, [])
             dict_clusters[lab].append(idx)
-        return dict_clusters, labels
+        return dict_clusters
     
     def grains(self, grain_size):
         """
