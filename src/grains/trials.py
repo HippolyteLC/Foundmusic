@@ -33,7 +33,7 @@ for i in range(N_CONFIGURATIONS):
             'config_seed':           config_seed,  
             'state_sampling_seed':   state_sampling_seeds[j],
             'cluster_sampling_seed': cluster_sampling_seeds[j],
-            'grain_position_sampling_seeds': grain_position_sampling_seeds[j]
+            'grain_position_sampling_seed': grain_position_sampling_seeds[j]
         })
 
 # Do the analysis of grains in a NB to visualize and choose descriptors
@@ -105,7 +105,7 @@ for trial in range(N_CONFIGURATIONS):
     n_streams = param_config_rng.choice(n_streams_arr)
 
     tpm = rand_tpm(n_states, config_seed)
-    init_states = [param_config_rng.randint(0, n_states) for _ in range(n_streams)]
+    init_states = [param_config_rng.integers(0, n_states) for _ in range(n_streams)]
 
     for rep in range(K_REPETITIONS):
 
@@ -117,9 +117,9 @@ for trial in range(N_CONFIGURATIONS):
             tpm=tpm,
             dict_clusters=dict_clusters,
             grains=grains,
-            seed_grain_sampling=trials[rep]["grain_sampling_seed"],
+            seed_grain_sampling=trials[rep]["cluster_sampling_seed"],
             seed_state_sampling=trials[rep]["state_sampling_seed"],
-            seed_grain_pos_sampling=trials[rep]["grain_pos_sampling_seed"],
+            seed_grain_pos_sampling=trials[rep]["grain_position_sampling_seed"],
         )
         output_analyzer = AnalyzerObject(PATH, SR)
         spec_arr, spectral_obj = output_analyzer.get_spectral_arr(y=audio_arr)

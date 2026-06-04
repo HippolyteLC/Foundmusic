@@ -33,7 +33,7 @@ def rand_tpm(n_states, config_seed=None):
     return tpm
 
 class MarkovGranulizer(Granulizer):
-    def __init__(self, sr, grain_size, densities=None, panning=[(1,1)], grain_sizes=None):
+    def __init__(self, sr=48000, grain_size=100, densities=None, panning=[(1,1)], grain_sizes=None):
         # TODO: add second granular parametre option
         super().__init__(sr)
         self.densities = densities
@@ -76,10 +76,10 @@ class MarkovGranulizer(Granulizer):
         Now input TPM so that I can separate seed 
         """
         if delta_t is None:
-            delta_t = self.grain_size * 10
+            delta_t_samples = self.grain_size * 10
 
         grain_size = int(grains[1] - grains[0])
-        n_states = n_clusters * len(self.densities) * len(self.grain_sizes)
+        n_states = n_clusters * len(densities) * len(grain_sizes)
         
         # states with possible density, size values
         states = []
@@ -104,9 +104,7 @@ class MarkovGranulizer(Granulizer):
 
         num_chans = 1 # mono output to avoid panning influence in spectral output (not an coustic param)
         curr_states = init_states
-        delta_t_samples = int(delta_t * self.sr)
         final_output_buffer = np.zeros((num_chans, n_iterations*delta_t_samples)) 
-
         markov_chains_tracking = []
 
         for stream in range(n_streams):
@@ -123,6 +121,8 @@ class MarkovGranulizer(Granulizer):
                 
                 # this sampling process needs its own seed
                 state_sampling_rng = np.random.default_rng(seed_state_sampling)
+                print(tpm[curr_states[stream]])
+                print(list(range(n_states)))
                 next_state = state_sampling_rng.choice(range(n_states), p=tpm[curr_states[stream]])
                 curr_states[stream] = next_state
                 markov_chain_tracking_stream.append(next_state)
