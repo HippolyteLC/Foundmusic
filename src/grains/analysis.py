@@ -64,15 +64,18 @@ class AnalyzerObject():
         We only compute the entire audio's BFT and spectral arr once. 
         """
         # TODO: add dynamic num_f and fft_size srtting based on grain size
-
+        # print("DEBUG")  
 
         if y is not None:
             audio_arr = y   
         elif not self.loaded_y:
+            print("DEBUG")
             self.load_y()
             self.loaded_y = True
             audio_arr = self.y
-
+        else:
+            audio_arr = self.y
+        print("DEBUG")
         bft_obj = af.BFT(num=num_freq_bins, samplate=self.sr, radix2_exp=radix_exp, 
             data_type=af.type.SpectralDataType.MAG,
             scale_type=af.type.SpectralFilterBankScaleType.LINEAR)       
@@ -119,7 +122,7 @@ class AnalyzerObject():
             grain_mean_descr.append(grain_dscr_mean)
         return grain_mean_descr
     
-    def compute_grain_descriptors(self, grain_size, num_freq_bins=1025, radix_exp=11):
+    def compute_grain_descriptors(self, grain_size, y=None, num_freq_bins=1025, radix_exp=11):
         """
         Compute centroid, spread, skewness, kurtosis (good for percussive
         discrimination in instrument classification, Ansi Klapuri et al. 2006)
@@ -128,7 +131,7 @@ class AnalyzerObject():
         df shape: (n_samples, n_features)
         """
 
-        spec_arr, spectral_obj = self.get_spectral_arr(num_freq_bins, radix_exp)
+        spec_arr, spectral_obj = self.get_spectral_arr(y, num_freq_bins, radix_exp)
         # grain_size = int(self.sr*grain_duration)
         n_grains = int(len(self.y)//grain_size)
         grains = [i*grain_size for i in range(n_grains)]

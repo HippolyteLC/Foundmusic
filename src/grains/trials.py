@@ -9,8 +9,8 @@ from datetime import datetime
 
 # Set the seeds
 
-N_CONFIGURATIONS = 10
-K_REPETITIONS = 5
+N_CONFIGURATIONS = 1
+K_REPETITIONS = 2
 
 master_rng = np.random.default_rng(42)
 
@@ -32,7 +32,7 @@ for i in range(N_CONFIGURATIONS):
             'rep_id':                j,
             'config_seed':           config_seed,  
             'state_sampling_seed':   state_sampling_seeds[j],
-            'cluster_sampling_seed': cluster_sampling_seeds[j]
+            'cluster_sampling_seed': cluster_sampling_seeds[j],
             'grain_position_sampling_seeds': grain_position_sampling_seeds[j]
         })
 
@@ -40,6 +40,7 @@ for i in range(N_CONFIGURATIONS):
 
 PATH =  "..\..\corpus\\pilot_trial_1"
 SR = 48000
+
 time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 trial_dir = os.path.normpath(PATH + f"\\trial_data\\")
 trial_path = os.path.normpath(PATH + f"\\trial_data\\{time}_trial.json")
@@ -48,10 +49,15 @@ if not os.path.exists(trial_dir):
 
 analyzer = AnalyzerObject(PATH, SR)
 analyzer.load_y()
+print(analyzer.y.shape)
 grain_duration = 0.1 # 100 ms
 grain_size = int(SR*grain_duration)
-df = analyzer.compute_grain_descriptors(grain_size)
-analyzer.save_metadata(df, grain_duration=grain_duration)
+METADATA_PATH = "..\..\corpus\pilot_trial_1\metadata\grain_0.1_s_metadata_6d91620b.csv"
+if os.path.exists(METADATA_PATH):
+    df = analyzer.load_metadata(METADATA_PATH)
+else:
+    df = analyzer.compute_grain_descriptors(grain_size)
+    analyzer.save_metadata(df, grain_duration=grain_duration)
 _, df_scaled = analyzer.scale_metadata(df, scaler=2)
 x = "rolloff"
 y = "crest"
@@ -60,15 +66,15 @@ features = [x,y]
 
 # Set the parametre value ranges
 
-grains = analyzer.grains()
+grains = analyzer.grains(grain_size)
 n_streams_arr = [1,2,4,16]
 windows = [np.hanning, rev_exp] # add exp
 density_arrays = [
-    [1, 2, 4]
+    [1, 2, 4],
     [10, 20, 40],
     [100, 200, 400]
 ]
-grain_sizes = [
+grain_size_arrays = [
     [1, 10, 20],
     [40, 60, 100]
 ]
@@ -78,7 +84,9 @@ granulator = MarkovGranulizer(sr=SR, grain_size=grain_size)
 
 # Do the trial runs
 
+print("starting trials")
 for trial in range(N_CONFIGURATIONS):
+    print(f"trial {trial}")
     config_seed = trials[trial]["config_seed"]
     param_config_rng = np.random.default_rng(config_seed)
    
@@ -86,15 +94,18 @@ for trial in range(N_CONFIGURATIONS):
     kmeans_obj = analyzer.compute_kmeans(df_scaled, n_clusters=n_clusters, features=features)
     dict_clusters, _ = analyzer.get_cluster_dict(kmeans_obj.labels_)
     
-    n_states = len(grain_sizes) * len(densities) * n_clusters
+    n_states = len(grain_size_arrays) * len(density_arrays) * n_clusters
     
 
     # randomize params per trial
-    tpm = rand_tpm(n_states, config_seed)
-    init_states = [param_config_rng.randint(0, n_states) for _ in range(n_streams)]
     densities = [param_config_rng.choice(i) for i in density_arrays]
+    grain_sizes = [param_config_rng.choice(i) for i in grain_size_arrays]
+
     window = param_config_rng.choice(windows)
     n_streams = param_config_rng.choice(n_streams_arr)
+
+    tpm = rand_tpm(n_states, config_seed)
+    init_states = [param_config_rng.randint(0, n_states) for _ in range(n_streams)]
 
     for rep in range(K_REPETITIONS):
 

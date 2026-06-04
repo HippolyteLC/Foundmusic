@@ -24,7 +24,7 @@ def rand_tpm(n_states, config_seed=None):
     
     # Part of the config random sampling 
     config_rng = np.random.default_rng(config_seed)
-    random_tpm = config_rng.rand(n_states,n_states)
+    random_tpm = config_rng.random((n_states,n_states))
     tpm = []
     for i in random_tpm:
         row = i / np.sum(i)
