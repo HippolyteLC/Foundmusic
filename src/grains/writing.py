@@ -32,7 +32,8 @@ def get_output_id(paramdict, hash_length=6):
     filename = f"{timestamp}_{param_hash}"
     return filename + ".wav", filename + ".json"
 
-def save_output_data(output_data, sr, parametre_dict, output_dir):
+def save_output_data(output_data, sr, parametre_dict, output_dir, 
+                     trial_output_path=None,trial_meta_data_path=None):
     """
     write json metadata and output wav to folders
     """
@@ -40,6 +41,10 @@ def save_output_data(output_data, sr, parametre_dict, output_dir):
         os.makedirs(output_dir)
     meta_data_path = output_dir + "\metadata"
     output_data_path = output_dir + "\output"
+    if trial_output_path:
+        output_data_path = trial_output_path
+    if trial_meta_data_path:
+        meta_data_path = trial_meta_data_path
     if not os.path.exists(meta_data_path):
         os.makedirs(meta_data_path) 
     if not os.path.exists(output_data_path):

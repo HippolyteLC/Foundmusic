@@ -152,10 +152,15 @@ class MarkovGranulizer(Granulizer):
                 grain = y[grain_y_idx:grain_y_end]
                 
                 # add filler so that the shorter grain is sampled from the middle of the original grain
-                filler = int((len(grain)-grain_size_change)//2)
-                new_grain = grain[filler:-filler]
+                # filler = int((len(grain)-grain_size_change)//2)
+                # new_grain = grain[filler:-filler]
+                # new_grain_size = len(new_grain)
+                filler = int((len(grain) - grain_size_change) // 2)
+                if filler > 0:
+                    new_grain = grain[filler:-filler]
+                else:
+                    new_grain = grain
                 new_grain_size = len(new_grain)
-                print("New grain size:", new_grain_size)
                     
                 for i in range(density):
                     s = grain_pos_sampling_rng.choice(temp_buffer.shape[-1])
@@ -164,25 +169,17 @@ class MarkovGranulizer(Granulizer):
                     if e >= temp_buffer.shape[-1]:
                         e = temp_buffer.shape[-1]
                     grain_slice = new_grain[:e-s]
-                    print(grain_slice.shape)
                     grain_slice = grain_slice * window(len(grain_slice))
-                    # for j in range(num_chans):
-                    #     temp_buffer[j][s:e] = temp_buffer[j][s:e] + grain_slice
                     temp_buffer[s:e] = temp_buffer[s:e] + grain_slice
 
-                # apply screen windowing 
-                # if window:
-                #     for k in range(num_chans):
-                #         temp_buffer[k] = temp_buffer[k] * window(temp_buffer.shape[-1])
-
-                # output_buffer = np.concatenate([output_buffer, temp_buffer], axis=1) # only for multi channel
-                print(output_buffer.shape, temp_buffer.shape)
                 output_buffer = np.concatenate([output_buffer, temp_buffer])
 
             final_output_buffer = final_output_buffer + output_buffer
+            
             markov_chains_tracking.append(markov_chain_tracking_stream)
 
         final_output_buffer = normalize_output(final_output_buffer)
+        
         return final_output_buffer, markov_chains_tracking, params
 
     def run_v2(self, y, n_iterations, delta_t, n_streams, window, n_clusters, seed, init_states, grains, dict_clusters):

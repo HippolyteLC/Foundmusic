@@ -9,10 +9,11 @@ from datetime import datetime
 
 # Set the seeds
 
-N_CONFIGURATIONS = 1
+N_CONFIGURATIONS = 6
 K_REPETITIONS = 2
+MASTER_SEED = 42
 
-master_rng = np.random.default_rng(42)
+master_rng = np.random.default_rng(MASTER_SEED)
 
 trials = []
 state_sampling_seeds = []
@@ -43,9 +44,24 @@ SR = 48000
 
 time = datetime.now().strftime("%Y%m%d_%H%M%S")
 trial_dir = os.path.normpath(PATH + f"\\trial_data\\")
-trial_path = os.path.normpath(PATH + f"\\trial_data\\{time}_trial.json")
+trial_logs_dir = os.path.normpath(trial_dir + "\\logs")
+trial_params_dir = os.path.normpath(trial_dir + "\\params")
+trial_outputs_dir = os.path.normpath(trial_dir + "\\outputs" + f"\\{time}_trial")
+trial_metadata_dir = os.path.normpath(trial_dir + "\\metadata" + f"\\{time}_trial")
+
 if not os.path.exists(trial_dir):
     os.makedirs(trial_dir)
+if not os.path.exists(trial_logs_dir):
+    os.makedirs(trial_logs_dir)
+if not os.path.exists(trial_params_dir):
+    os.makedirs(trial_params_dir)
+if not os.path.exists(trial_outputs_dir):
+    os.makedirs(trial_outputs_dir)
+if not os.path.exists(trial_metadata_dir):
+    os.makedirs(trial_metadata_dir)
+
+trial_logs_path = os.path.normpath(trial_logs_dir + f"\\{time}_trial.json")
+trial_params_path = os.path.normpath(trial_params_dir + f"\\{time}_trial.json")
 
 analyzer = AnalyzerObject(PATH, SR)
 analyzer.load_y()
@@ -62,25 +78,43 @@ _, df_scaled = analyzer.scale_metadata(df, scaler=2)
 x = "rolloff"
 y = "crest"
 features = [x,y]
-
+grains = analyzer.grains(grain_size)
+granulator = MarkovGranulizer(sr=SR)
 
 # Set the parametre value ranges
 
-grains = analyzer.grains(grain_size)
 n_streams_arr = [1,2,4,16]
 windows = [np.hanning, rev_exp] # add exp
 density_arrays = [
-    [1, 2, 4],
-    [10, 20, 40],
-    [100, 200, 400]
+    [1, 10, 100, 1000],
+    [3, 30, 300, 3000],
+    [9, 90, 900, 9000]
 ]
+# density_arrays = [
+#     [1,10,20]
+# ]
 grain_size_arrays = [
-    [1, 10, 20],
-    [40, 60, 100]
+    int(i*SR//1000) for i in [1, 40, 100] for _ in range(3)
+    # [int(i*SR//1000) for i in [10, 60, 100]],
+    # [int(i*SR//1000) for i in [20, ]]
 ]
 n_clusters_arr = [2, 3, 5, 8]
 
-granulator = MarkovGranulizer(sr=SR)
+config_params = {
+    "n_streams_arr": n_streams_arr,
+    "windows": [str(win.__name__) for win in windows],
+    "density_arrays": density_arrays,
+    "grain_size_arrays": grain_size_arrays,
+    "n_clusters_arr": n_clusters_arr,
+    "features": features,
+    "n_configurations": N_CONFIGURATIONS,
+    "k_repetitions": K_REPETITIONS,
+    "sr": SR,
+    "master_seed": MASTER_SEED,
+    "grain_size": grain_size
+}
+with open(trial_params_path, "w") as f:
+    json.dump(config_params, f, indent=4)
 
 # Do the trial runs
 
@@ -127,17 +161,20 @@ for trial in range(N_CONFIGURATIONS):
         )
         output_analyzer = AnalyzerObject(PATH, SR)
         spec_arr, spectral_obj = output_analyzer.get_spectral_arr(y=audio_arr)
-        centroid_arr = spectral_obj.centroid(spec_arr)
+        flatness_arr = spectral_obj.flatness(spec_arr)
         flux_arr = spectral_obj.flux(spec_arr)
+        centroid_arr = spectral_obj.centroid(spec_arr)
         trial_id = trials[trial]["config_id"]
         repetition_id = trials[trial]["rep_id"]
         # print(flux_arr.shape)
         params["sr"] = SR
+        params["grain_size"]
         params["trial_id"] = trial_id
         params["rep_id"] = repetition_id
         params["centroid_arr"] = [float(i) for i in centroid_arr.tolist()]
+        params["flatness_arr"] = [float(i) for i in flatness_arr.tolist()]
         params["flux_arr"] = [float(i) for i in flux_arr.tolist()]
-        params["markov_chains"] = [int(i) for i in markchains[0]]
+        params["markov_chains"] = [[int(i) for i in j] for j in markchains]
         
         # print(list((k, type(v)) for k, v in params.items()))
         # print(params)
@@ -145,19 +182,19 @@ for trial in range(N_CONFIGURATIONS):
         # break
         
         # Logging + saving output data
-        if trial % 10 == 0:
+        if trial % 2 == 0:
             writing.save_output_data(
                 output_data=audio_arr,
                 sr=SR,
                 parametre_dict=params,
-                output_dir=PATH
+                output_dir=PATH,
+                trial_output_path=trial_outputs_dir,
+                trial_meta_data_path=trial_metadata_dir
                 )
         print("trial output saved")
 
-
-
-        if os.path.exists(trial_path):
-            with open(trial_path, 'r') as f:
+        if os.path.exists(trial_logs_path):
+            with open(trial_logs_path, 'r') as f:
                 all_trials = json.load(f)
         else:
             all_trials = [] 
@@ -165,7 +202,9 @@ for trial in range(N_CONFIGURATIONS):
 
         all_trials.append(params)
         
-        with open(trial_path, 'w') as f:
-            json.dump(all_trials, f) 
+        with open(trial_logs_path, 'w') as f:
+            json.dump(all_trials, f, indent=4) 
 
-        print(f'saved trial {trial_id}')
+        print(f'saved trial {trial_id} rep {repetition_id}')
+    print(f"finished trial {trial_id}")
+    
