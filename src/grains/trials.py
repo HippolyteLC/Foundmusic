@@ -6,11 +6,14 @@ import writing
 import json 
 import os
 from datetime import datetime
+from scipy import stats
 
 # Set the seeds
+N_CONFIGS_1_2_3 = 300
+N_CONFIGS_4 = 200
 
-N_CONFIGURATIONS = 6
-K_REPETITIONS = 2
+N_CONFIGURATIONS = N_CONFIGS_1_2_3 + N_CONFIGS_4
+K_REPETITIONS = 3
 MASTER_SEED = 42
 
 master_rng = np.random.default_rng(MASTER_SEED)
@@ -37,7 +40,7 @@ for i in range(N_CONFIGURATIONS):
             'grain_position_sampling_seed': grain_position_sampling_seeds[j]
         })
 
-# Do the analysis of grains in a NB to visualize and choose descriptors
+### Do the analysis of grains in a NB to visualize and choose descriptors
 
 PATH =  "..\..\corpus\\pilot_trial_1"
 SR = 48000
@@ -65,7 +68,6 @@ trial_params_path = os.path.normpath(trial_params_dir + f"\\{time}_trial.json")
 
 analyzer = AnalyzerObject(PATH, SR)
 analyzer.load_y()
-# print(analyzer.y.shape)
 grain_duration = 0.1 # 100 ms
 grain_size = int(SR*grain_duration)
 METADATA_PATH = "..\..\corpus\pilot_trial_1\metadata\grain_0.1_s_metadata_6d91620b.csv"
@@ -81,130 +83,283 @@ features = [x,y]
 grains = analyzer.grains(grain_size)
 granulator = MarkovGranulizer(sr=SR)
 
-# Set the parametre value ranges
+### Set the parametre value ranges
 
 n_streams_arr = [1,2,4,16]
 windows = [np.hanning, rev_exp] # add exp
 density_arrays = [
-    [1, 10, 100, 1000],
-    [3, 30, 300, 3000],
-    [9, 90, 900, 9000]
+    [1, 1, 1], # uniform low
+    [1, 3, 9], # low increasing (x3)
+    [10,10,10], # uniform medium 
+    [10,30,90], # medium increasing (x3)
+    [100,100,100], # uniform high
+    [100, 300, 900], # high increasing (x3)
+    [1, 90, 900], # high contrast low-high
+    [30, 90, 100] # low contrast medium-high
+    # [1, 10, 100, 1000],
+    # [3, 30, 300, 3000],
+    # [9, 90, 900, 9000]
 ]
-# density_arrays = [
-#     [1,10,20]
-# ]
-grain_size_arrays = [
-    int(i*SR//1000) for i in [1, 40, 100] for _ in range(3)
-    # [int(i*SR//1000) for i in [10, 60, 100]],
-    # [int(i*SR//1000) for i in [20, ]]
+grain_duration_arrays = [
+    [1,1,1], # low only
+    [40, 40, 40],# medium only
+    [100,100,100], # high only
+    [1, 40, 100], # increasing (even sampling)
+    [100,1,100] # high contrast
 ]
+grain_size_arrays = [ 
+    [int(i*SR//1000) for i in j] for j in grain_duration_arrays
+]
+
 n_clusters_arr = [2, 3, 5, 8]
 
-config_params = {
+general_trial_config = {
+    "features": features,
+    "n_configurations": N_CONFIGURATIONS,
+    "k_repetitions": K_REPETITIONS,
+    "master_seed": MASTER_SEED,
+    "sr": SR,
+    "grain_size": grain_size
+}
+config_param_value_ranges = {
     "n_streams_arr": n_streams_arr,
     "windows": [str(win.__name__) for win in windows],
     "density_arrays": density_arrays,
     "grain_size_arrays": grain_size_arrays,
-    "n_clusters_arr": n_clusters_arr,
-    "features": features,
-    "n_configurations": N_CONFIGURATIONS,
-    "k_repetitions": K_REPETITIONS,
-    "sr": SR,
-    "master_seed": MASTER_SEED,
-    "grain_size": grain_size
+    "n_clusters_arr": n_clusters_arr
 }
+
+general_config = {
+    "general_trial_parametres": general_trial_config,
+    "config_parametre_ranges": config_param_value_ranges
+}
+
 with open(trial_params_path, "w") as f:
-    json.dump(config_params, f, indent=4)
+    json.dump(general_config, f, indent=4)
 
-# Do the trial runs
+### Do the trial runs
 
-print("starting trials")
-for trial in range(N_CONFIGURATIONS):
-    print(f"trial {trial}")
+##### Trial 1,2, and 3 (Sub group studies)
+# Trial 1: Markov, Trial 2: State, Trial 3: General
+
+print(f"starting trials Trial 1,2, and 3 (Sub group studies)")
+print("Trial 1: Markov, Trial 2: State, Trial 3: General")
+N_CONFIGS_1_2_3 = 300
+
+for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS):
+    if trial % 50 == 0:
+        print(f"trial {trial}")
     config_seed = trials[trial]["config_seed"]
-    param_config_rng = np.random.default_rng(config_seed)
+    config_id = trials[trial]["config_id"]
+    repetition_id = trials[trial]["rep_id"]
+    trial_id = f"config_{config_id}_rep_{repetition_id}"
+
+    # STATE parametres
+    if 100 <= config_id < 200:
+        param_config_rng = np.random.default_rng(config_seed) # unfrozen seed
+
+        densities = [int(i) for i in param_config_rng.choice(density_arrays).tolist()]
+        grain_sizes = [int(i) for i in param_config_rng.choice(grain_size_arrays).tolist()]
+        n_clusters = int(param_config_rng.choice(n_clusters_arr)) 
+    else:
+        param_config_rng = np.random.default_rng(trials[0]["config_seed"]) # unfrozen seed
+
+        densities = param_config_rng.choice(density_arrays)
+        grain_sizes = param_config_rng.choice(grain_size_arrays)
+        n_clusters = int(param_config_rng.choice(n_clusters_arr)) 
+
+    kmeans_obj = analyzer.compute_kmeans(df_scaled, n_clusters=n_clusters, features=features)
+    dict_clusters = analyzer.get_cluster_dict(kmeans_obj.labels_)
+    n_states = len(grain_sizes) * len(densities) * n_clusters
+
+
+    # GS parametres
+    if 200 <= config_id < 300: 
+        param_config_rng = np.random.default_rng(config_seed) # unfrozen seed
+
+        window = param_config_rng.choice(windows)
+        n_streams = int(param_config_rng.choice(n_streams_arr))
+    else:
+        param_config_rng = np.random.default_rng(trials[0]["config_seed"]) # unfrozen seed
+
+        window = param_config_rng.choice(windows)
+        n_streams = int(param_config_rng.choice(n_streams_arr))
+
+    # MARKOV parametre
+    if config_id < 100:
+        conf_seed = config_seed
+        tpm = rand_tpm(n_states, conf_seed)
+    else:       
+        conf_seed = trials[0]["config_seed"]
+        tpm = rand_tpm(n_states, conf_seed)        
+
+    audio_arr, markchains, params = granulator.run_v3(
+        y=analyzer.y,
+        densities=densities,
+        grain_size=grain_size,
+        grains=grains,
+        grain_sizes=grain_sizes,
+        tpm=tpm,
+        dict_clusters=dict_clusters,
+        n_streams=n_streams,
+        window=window,
+        n_clusters=n_clusters,
+        config_seed=conf_seed,
+        seed_grain_sampling=trials[trial]["cluster_sampling_seed"],
+        seed_state_sampling=trials[trial]["state_sampling_seed"],
+        seed_grain_pos_sampling=trials[trial]["grain_position_sampling_seed"],
+    )
+    synthesis_parametres = params
+    parametres = {}
+    parametres["trial_id"] = trial_id
+    
+    output_analyzer = AnalyzerObject(PATH, SR)
+    spec_arr, spectral_obj = output_analyzer.get_spectral_arr(y=audio_arr)
+    flatness_arr = spectral_obj.flatness(spec_arr)
+    flux_arr = spectral_obj.flux(spec_arr)
+    centroid_arr = spectral_obj.centroid(spec_arr)
+    metrics = {
+        "centroid_mean": np.mean(centroid_arr),
+        "centroid_std": np.std(centroid_arr),
+        "centroid_skewness": stats.skew(centroid_arr),
+        "flatness_mean": np.mean(flatness_arr),
+        "flatness_std": np.std(flatness_arr),
+        "flatness_skewness": stats.skew(flatness_arr),
+        "flux_mean": np.mean(flux_arr),
+        "flux_std": np.std(flux_arr),
+        "flux_skewness": stats.skew(flux_arr)
+    }
+
+    parametres["metrics"] = {k: float(v) for k,v in metrics.items()}
+    parametres["markov_chains"] = [[int(i) for i in j] for j in markchains]
+    
+
+    # print("output generared and params collected!")
+    
+    # Logging + saving output data
+    if trial % 10 == 0:
+        writing.save_output_data(
+            output_data=audio_arr,
+            sr=SR,
+            parametre_dict=parametres,
+            output_dir=PATH,
+            trial_output_path=trial_outputs_dir,
+            trial_meta_data_path=trial_metadata_dir
+            )
+        
+    # print("trial output saved")
+
+    if os.path.exists(trial_logs_path):
+        with open(trial_logs_path, 'r') as f:
+            all_trials = json.load(f)
+    else:
+        all_trials = [] 
+    # print("checked trial data save path exists")
+
+    all_trials.append(parametres)
+    
+    with open(trial_logs_path, 'w') as f:
+        json.dump(all_trials, f, indent=4) 
+
+    # print(f'saved trial_id: {trial_id}')   
+
+##### Trial 4 (All parametres unfrozen)
+N_CONFIGS_4 = 200
+
+print(f"starting trials Trial 4 (All parametres unfrozen)")
+
+for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS, N_CONFIGURATIONS*K_REPETITIONS):
+    if trial % 50 == 0:
+        print(f"trial {trial}")    
+    config_seed = trials[trial]["config_seed"]
+    config_id = trials[trial]["config_id"]
+    repetition_id = trials[trial]["rep_id"]
+    trial_id = f"config_{config_id}_rep_{repetition_id}"
    
     n_clusters = int(param_config_rng.choice(n_clusters_arr)) 
     kmeans_obj = analyzer.compute_kmeans(df_scaled, n_clusters=n_clusters, features=features)
     dict_clusters = analyzer.get_cluster_dict(kmeans_obj.labels_)
-
     n_states = len(grain_size_arrays) * len(density_arrays) * n_clusters
-    print(f"n states: {n_states} , clusters {n_clusters}")
 
     # randomize params per trial
-    densities = [int(param_config_rng.choice(i)) for i in density_arrays]
-    grain_sizes = [int(param_config_rng.choice(i)) for i in grain_size_arrays]
+    densities = param_config_rng.choice(density_arrays)
+    grain_sizes = param_config_rng.choice(grain_size_arrays)
 
     window = param_config_rng.choice(windows)
     n_streams = int(param_config_rng.choice(n_streams_arr))
 
     tpm = rand_tpm(n_states, config_seed)
-    # init_states = [param_config_rng.integers(0, n_states) for _ in range(n_streams)]
 
-    for rep in range(K_REPETITIONS):
+    audio_arr, markchains, params = granulator.run_v3(
+        y=analyzer.y,
+        densities=densities,
+        grain_size=grain_size,
+        grains=grains,
+        grain_sizes=grain_sizes,
+        tpm=tpm,
+        dict_clusters=dict_clusters,
+        n_streams=n_streams,
+        window=window,
+        n_clusters=n_clusters,
+        config_seed=config_seed,
+        seed_grain_sampling=trials[trial]["cluster_sampling_seed"],
+        seed_state_sampling=trials[trial]["state_sampling_seed"],
+        seed_grain_pos_sampling=trials[trial]["grain_position_sampling_seed"],
+    )
+    synthesis_parametres = params
+    parametres = {}
+    
+    config_id = trials[trial]["config_id"]
+    repetition_id = trials[trial]["rep_id"]
+    trial_id = f"config_{config_id}_rep_{repetition_id}"
+    parametres["trial_id"] = trial_id
+    
+    output_analyzer = AnalyzerObject(PATH, SR)
+    spec_arr, spectral_obj = output_analyzer.get_spectral_arr(y=audio_arr)
+    flatness_arr = spectral_obj.flatness(spec_arr)
+    flux_arr = spectral_obj.flux(spec_arr)
+    centroid_arr = spectral_obj.centroid(spec_arr)
+    metrics = {
+        "centroid_mean": np.mean(centroid_arr),
+        "centroid_std": np.std(centroid_arr),
+        "centroid_skewness": stats.skew(centroid_arr),
+        "flatness_mean": np.mean(flatness_arr),
+        "flatness_std": np.std(flatness_arr),
+        "flatness_skewness": stats.skew(flatness_arr),
+        "flux_mean": np.mean(flux_arr),
+        "flux_std": np.std(flux_arr),
+        "flux_skewness": stats.skew(flux_arr)
+    }
 
-        audio_arr, markchains, params = granulator.run_v3(
-            y=analyzer.y,
-            densities=densities,
-            grain_size=grain_size,
-            grains=grains,
-            grain_sizes=grain_sizes,
-            tpm=tpm,
-            dict_clusters=dict_clusters,
-            n_streams=n_streams,
-            window=window,
-            n_clusters=n_clusters,
-            config_seed=config_seed,
-            seed_grain_sampling=trials[rep]["cluster_sampling_seed"],
-            seed_state_sampling=trials[rep]["state_sampling_seed"],
-            seed_grain_pos_sampling=trials[rep]["grain_position_sampling_seed"],
-        )
-        output_analyzer = AnalyzerObject(PATH, SR)
-        spec_arr, spectral_obj = output_analyzer.get_spectral_arr(y=audio_arr)
-        flatness_arr = spectral_obj.flatness(spec_arr)
-        flux_arr = spectral_obj.flux(spec_arr)
-        centroid_arr = spectral_obj.centroid(spec_arr)
-        trial_id = trials[trial]["config_id"]
-        repetition_id = trials[trial]["rep_id"]
-        # print(flux_arr.shape)
-        params["sr"] = SR
-        params["grain_size"]
-        params["trial_id"] = trial_id
-        params["rep_id"] = repetition_id
-        params["centroid_arr"] = [float(i) for i in centroid_arr.tolist()]
-        params["flatness_arr"] = [float(i) for i in flatness_arr.tolist()]
-        params["flux_arr"] = [float(i) for i in flux_arr.tolist()]
-        params["markov_chains"] = [[int(i) for i in j] for j in markchains]
-        
-        # print(list((k, type(v)) for k, v in params.items()))
-        # print(params)
-        print("output generared and params collected!")
-        # break
-        
-        # Logging + saving output data
-        if trial % 2 == 0:
-            writing.save_output_data(
-                output_data=audio_arr,
-                sr=SR,
-                parametre_dict=params,
-                output_dir=PATH,
-                trial_output_path=trial_outputs_dir,
-                trial_meta_data_path=trial_metadata_dir
-                )
-        print("trial output saved")
+    parametres["metrics"] = {k: float(v) for k,v in metrics.items()}
+    parametres["markov_chains"] = [[int(i) for i in j] for j in markchains]
+    
+    # print("output generared and params collected!")
+    
+    # Logging + saving output data
+    if trial % 10 == 0:
+        writing.save_output_data(
+            output_data=audio_arr,
+            sr=SR,
+            parametre_dict=parametres,
+            output_dir=PATH,
+            trial_output_path=trial_outputs_dir,
+            trial_meta_data_path=trial_metadata_dir
+            )
+    # print("trial output saved")
 
-        if os.path.exists(trial_logs_path):
-            with open(trial_logs_path, 'r') as f:
-                all_trials = json.load(f)
-        else:
-            all_trials = [] 
-        print("checked trial data save path exists")
+    if os.path.exists(trial_logs_path):
+        with open(trial_logs_path, 'r') as f:
+            all_trials = json.load(f)
+    else:
+        all_trials = [] 
+    # print("checked trial data save path exists")
 
-        all_trials.append(params)
-        
-        with open(trial_logs_path, 'w') as f:
-            json.dump(all_trials, f, indent=4) 
+    all_trials.append(parametres)
+    
+    with open(trial_logs_path, 'w') as f:
+        json.dump(all_trials, f, indent=4) 
 
-        print(f'saved trial {trial_id} rep {repetition_id}')
-    print(f"finished trial {trial_id}")
+    # print(f'saved trial {trial} rep {repetition_id}')
+    # print(f"finished trial {trial_id}")
     

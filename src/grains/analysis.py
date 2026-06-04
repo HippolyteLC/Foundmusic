@@ -69,13 +69,13 @@ class AnalyzerObject():
         if y is not None:
             audio_arr = y   
         elif not self.loaded_y:
-            print("DEBUG")
+            # print("DEBUG")
             self.load_y()
             self.loaded_y = True
             audio_arr = self.y
         else:
             audio_arr = self.y
-        print("DEBUG")
+        # print("DEBUG")
         bft_obj = af.BFT(num=num_freq_bins, samplate=self.sr, radix2_exp=radix_exp, 
             data_type=af.type.SpectralDataType.MAG,
             scale_type=af.type.SpectralFilterBankScaleType.LINEAR)       

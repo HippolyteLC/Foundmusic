@@ -21,7 +21,9 @@ def rand_tpm(n_states, config_seed=None):
     """
     if not config_seed:
         return
-    print(n_states)
+    # print(n_states)
+    # print(" Tpm input states:", n_states)
+
     # Part of the config random sampling 
     config_rng = np.random.default_rng(config_seed)
     random_tpm = config_rng.random((n_states,n_states))
@@ -56,7 +58,6 @@ class MarkovGranulizer(Granulizer):
         """
         if not config_seed:
             return
-        
         # Part of the config random sampling 
         config_rng = np.random.default_rng(config_seed)
         random_tpm = config_rng.rand(n_states,n_states)
@@ -81,6 +82,9 @@ class MarkovGranulizer(Granulizer):
             delta_t_samples = grain_size * 10
 
         n_states = n_clusters * len(densities) * len(grain_sizes)
+        # print(n_clusters, densities, grain_sizes)
+        # print("N states:", n_states)
+        # print("row of tpm", tpm[0].shape)
         config_rng = np.random.default_rng(config_seed)
         init_states = [int(config_rng.integers(0, n_states)) for _ in range(n_streams)]
 
@@ -161,7 +165,7 @@ class MarkovGranulizer(Granulizer):
                 else:
                     new_grain = grain
                 new_grain_size = len(new_grain)
-                    
+
                 for i in range(density):
                     s = grain_pos_sampling_rng.choice(temp_buffer.shape[-1])
                     e = s + new_grain_size
