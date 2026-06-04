@@ -21,7 +21,7 @@ def rand_tpm(n_states, config_seed=None):
     """
     if not config_seed:
         return
-    
+    print(n_states)
     # Part of the config random sampling 
     config_rng = np.random.default_rng(config_seed)
     random_tpm = config_rng.random((n_states,n_states))
@@ -41,7 +41,7 @@ class MarkovGranulizer(Granulizer):
         self.grain_sizes = grain_sizes
         self.grain_size = grain_size
         
-    def rand_tpm(self, n_states, config_seed=None):
+    def _rand_tpm(self, n_states, config_seed=None):
         """
         Requires own seed if run in experimental trials. 
 
@@ -68,14 +68,14 @@ class MarkovGranulizer(Granulizer):
     
     def run_v3(self, y, densities, grain_sizes, init_states, tpm, grains, dict_clusters,
                 seed_grain_sampling, seed_state_sampling, 
-                seed_grain_pos_sampling, n_iterations=20, delta_t=None, 
-                n_streams=1, window=np.hanning, n_clusters=2):
+                seed_grain_pos_sampling, n_streams=1, window=np.hanning, n_clusters=2,
+                n_iterations=20, delta_t_samples=None):
         """
         This functions is similar to v1. For n iterations create clouds of length delta_t. Do this
         for n streams, each final stream is then added to the final output buffer. 
         Now input TPM so that I can separate seed 
         """
-        if delta_t is None:
+        if delta_t_samples is None:
             delta_t_samples = self.grain_size * 10
 
         grain_size = int(grains[1] - grains[0])
@@ -93,13 +93,18 @@ class MarkovGranulizer(Granulizer):
 
         ### param saving for metadata
         params = locals().copy()
+        del params["i"]
+        del params["j"]
+        del params["k"]
         del params["self"]
         del params["y"]
         del params["grains"]
         del params["dict_clusters"]
         del params["clusters"]
+        params["tpm"] = [[float(j) for j in i] for i in params["tpm"]]
+        # params["n_streams"] = int(params["n_streams"])
         params["init_states"] = [int(i) for i in params["init_states"]]
-        params["window"] = params["window"].__name__
+        params["window"] = str(params["window"].__name__)
 
 
         num_chans = 1 # mono output to avoid panning influence in spectral output (not an coustic param)
@@ -121,8 +126,8 @@ class MarkovGranulizer(Granulizer):
                 
                 # this sampling process needs its own seed
                 state_sampling_rng = np.random.default_rng(seed_state_sampling)
-                print(tpm[curr_states[stream]])
-                print(list(range(n_states)))
+                # print(tpm[curr_states[stream]])
+                # print(list(range(n_states)))
                 next_state = state_sampling_rng.choice(range(n_states), p=tpm[curr_states[stream]])
                 curr_states[stream] = next_state
                 markov_chain_tracking_stream.append(next_state)
@@ -143,6 +148,7 @@ class MarkovGranulizer(Granulizer):
                 # add filler so that the shorter grain is sampled from the middle of the original grain
                 filler = int((len(grain)-grain_size_change)//2)
                 grain = grain[filler:grain_size_change+filler]
+                grain_size = len(grain)
                     
                 for i in range(density):
                     # this sampling process needs its own seed
@@ -162,7 +168,9 @@ class MarkovGranulizer(Granulizer):
                 #     for k in range(num_chans):
                 #         temp_buffer[k] = temp_buffer[k] * window(temp_buffer.shape[-1])
 
-                output_buffer = np.concatenate([output_buffer, temp_buffer], axis=1)
+                # output_buffer = np.concatenate([output_buffer, temp_buffer], axis=1) # only for multi channel
+                # print(output_buffer.shape, temp_buffer.shape)
+                output_buffer = np.concatenate([output_buffer, temp_buffer[0]], axis=0) # only for multi channel
             final_output_buffer = normalize_output(final_output_buffer + output_buffer)
             markov_chains_tracking.append(markov_chain_tracking_stream)
         return final_output_buffer, markov_chains_tracking, params

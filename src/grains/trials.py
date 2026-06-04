@@ -90,19 +90,19 @@ for trial in range(N_CONFIGURATIONS):
     config_seed = trials[trial]["config_seed"]
     param_config_rng = np.random.default_rng(config_seed)
    
-    n_clusters = param_config_rng.choice(n_clusters_arr) 
+    n_clusters = int(param_config_rng.choice(n_clusters_arr)) 
     kmeans_obj = analyzer.compute_kmeans(df_scaled, n_clusters=n_clusters, features=features)
     dict_clusters, _ = analyzer.get_cluster_dict(kmeans_obj.labels_)
-    
+
     n_states = len(grain_size_arrays) * len(density_arrays) * n_clusters
-    
+    print(f"n states: {n_states} , clusters {n_clusters}")
 
     # randomize params per trial
-    densities = [param_config_rng.choice(i) for i in density_arrays]
-    grain_sizes = [param_config_rng.choice(i) for i in grain_size_arrays]
+    densities = [int(param_config_rng.choice(i)) for i in density_arrays]
+    grain_sizes = [int(param_config_rng.choice(i)) for i in grain_size_arrays]
 
     window = param_config_rng.choice(windows)
-    n_streams = param_config_rng.choice(n_streams_arr)
+    n_streams = int(param_config_rng.choice(n_streams_arr))
 
     tpm = rand_tpm(n_states, config_seed)
     init_states = [param_config_rng.integers(0, n_states) for _ in range(n_streams)]
@@ -117,6 +117,9 @@ for trial in range(N_CONFIGURATIONS):
             tpm=tpm,
             dict_clusters=dict_clusters,
             grains=grains,
+            n_streams=n_streams,
+            window=window,
+            n_clusters=n_clusters,
             seed_grain_sampling=trials[rep]["cluster_sampling_seed"],
             seed_state_sampling=trials[rep]["state_sampling_seed"],
             seed_grain_pos_sampling=trials[rep]["grain_position_sampling_seed"],
@@ -127,13 +130,19 @@ for trial in range(N_CONFIGURATIONS):
         flux_arr = spectral_obj.flux(spec_arr)
         trial_id = trials[trial]["config_id"]
         repetition_id = trials[trial]["rep_id"]
-
+        # print(flux_arr.shape)
+        params["sr"] = SR
         params["trial_id"] = trial_id
         params["rep_id"] = repetition_id
-        params["centroid_arr"] = centroid_arr.tolist()
-        params["flux_arr"] = flux_arr.tolist()
-        params["markov_chains"] = markchains
-
+        params["centroid_arr"] = [float(i) for i in centroid_arr.tolist()[0]]
+        params["flux_arr"] = [float(i) for i in flux_arr.tolist()[0]]
+        params["markov_chains"] = [int(i) for i in markchains[0]]
+        
+        print(list((k, type(v)) for k, v in params.items()))
+        # print(params)
+        print("output generared and params collected!")
+        # break
+        
         # Logging + saving output data
         if trial % 10 == 0:
             writing.save_output_data(
@@ -142,15 +151,19 @@ for trial in range(N_CONFIGURATIONS):
                 parametre_dict=params,
                 output_dir=PATH
                 )
-            
+        print("trial output saved")
+
+
+
         if os.path.exists(trial_path):
             with open(trial_path, 'r') as f:
                 all_trials = json.load(f)
         else:
             all_trials = [] 
+        print("checked trial data save path exists")
 
         all_trials.append(params)
-
+        
         with open(trial_path, 'w') as f:
             json.dump(all_trials, f) 
 
