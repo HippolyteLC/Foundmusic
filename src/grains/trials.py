@@ -41,7 +41,7 @@ for i in range(N_CONFIGURATIONS):
 PATH =  "..\..\corpus\\pilot_trial_1"
 SR = 48000
 
-time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+time = datetime.now().strftime("%Y%m%d_%H%M%S")
 trial_dir = os.path.normpath(PATH + f"\\trial_data\\")
 trial_path = os.path.normpath(PATH + f"\\trial_data\\{time}_trial.json")
 if not os.path.exists(trial_dir):
@@ -49,7 +49,7 @@ if not os.path.exists(trial_dir):
 
 analyzer = AnalyzerObject(PATH, SR)
 analyzer.load_y()
-print(analyzer.y.shape)
+# print(analyzer.y.shape)
 grain_duration = 0.1 # 100 ms
 grain_size = int(SR*grain_duration)
 METADATA_PATH = "..\..\corpus\pilot_trial_1\metadata\grain_0.1_s_metadata_6d91620b.csv"
@@ -138,7 +138,7 @@ for trial in range(N_CONFIGURATIONS):
         params["flux_arr"] = [float(i) for i in flux_arr.tolist()[0]]
         params["markov_chains"] = [int(i) for i in markchains[0]]
         
-        print(list((k, type(v)) for k, v in params.items()))
+        # print(list((k, type(v)) for k, v in params.items()))
         # print(params)
         print("output generared and params collected!")
         # break

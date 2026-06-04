@@ -42,15 +42,17 @@ def save_output_data(output_data, sr, parametre_dict, output_dir):
     output_data_path = output_dir + "\output"
     if not os.path.exists(meta_data_path):
         os.makedirs(meta_data_path) 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_data_path)
+    if not os.path.exists(output_data_path):
+        os.makedirs(output_data_path, exist_ok=True)
     fp_wav, fp_json = get_output_id(parametre_dict)
     fp_metadata = os.path.join(meta_data_path, fp_json)
     fp_output = os.path.join(output_data_path, fp_wav)
+    print(fp_output)
     with open(fp_metadata, "w") as f:
         json.dump(parametre_dict, f, indent=4)
     if not output_data is None:
-        sf.write(fp_output, output_data, sr)
+        # print(output_data.shape[0])
+        sf.write(file=fp_output, data=output_data[0], samplerate=sr)
 
 
 
