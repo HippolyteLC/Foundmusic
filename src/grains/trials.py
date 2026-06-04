@@ -7,6 +7,9 @@ import json
 import os
 from datetime import datetime
 from scipy import stats
+import warnings
+
+warnings.filterwarnings('ignore', message='KMeans is known to have a memory leak on Windows with MKL')
 
 # Set the seeds
 N_CONFIGS_1_2_3 = 300
@@ -42,7 +45,7 @@ for i in range(N_CONFIGURATIONS):
 
 ### Do the analysis of grains in a NB to visualize and choose descriptors
 
-PATH =  "..\..\corpus\\pilot_trial_1"
+PATH =  "..\..\corpus\\pilot_study_2"
 SR = 48000
 
 time = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -63,7 +66,7 @@ if not os.path.exists(trial_outputs_dir):
 if not os.path.exists(trial_metadata_dir):
     os.makedirs(trial_metadata_dir)
 
-trial_logs_path = os.path.normpath(trial_logs_dir + f"\\{time}_trial.json")
+trial_logs_path = os.path.normpath(trial_logs_dir + f"\\{time}_trial.jsonl")
 trial_params_path = os.path.normpath(trial_params_dir + f"\\{time}_trial.json")
 
 analyzer = AnalyzerObject(PATH, SR)
@@ -82,6 +85,7 @@ y = "crest"
 features = [x,y]
 grains = analyzer.grains(grain_size)
 granulator = MarkovGranulizer(sr=SR)
+output_analyzer = AnalyzerObject(PATH, SR)
 
 ### Set the parametre value ranges
 
@@ -146,6 +150,9 @@ print(f"starting trials Trial 1,2, and 3 (Sub group studies)")
 print("Trial 1: Markov, Trial 2: State, Trial 3: General")
 N_CONFIGS_1_2_3 = 300
 
+
+last_n_clusters = None
+# all_trials = []
 for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS):
     if trial % 50 == 0:
         print(f"trial {trial}")
@@ -164,14 +171,16 @@ for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS):
     else:
         param_config_rng = np.random.default_rng(trials[0]["config_seed"]) # unfrozen seed
 
-        densities = param_config_rng.choice(density_arrays)
-        grain_sizes = param_config_rng.choice(grain_size_arrays)
+        densities = [int(i) for i in param_config_rng.choice(density_arrays)]
+        grain_sizes = [int(i) for i in param_config_rng.choice(grain_size_arrays)]
         n_clusters = int(param_config_rng.choice(n_clusters_arr)) 
 
-    kmeans_obj = analyzer.compute_kmeans(df_scaled, n_clusters=n_clusters, features=features)
-    dict_clusters = analyzer.get_cluster_dict(kmeans_obj.labels_)
-    n_states = len(grain_sizes) * len(densities) * n_clusters
+    if not last_n_clusters == n_clusters:
+        kmeans_obj = analyzer.compute_kmeans(df_scaled, n_clusters=n_clusters, features=features)
+        dict_clusters = analyzer.get_cluster_dict(kmeans_obj.labels_)
+        n_states = len(grain_sizes) * len(densities) * n_clusters
 
+    last_n_clusters = n_clusters
 
     # GS parametres
     if 200 <= config_id < 300: 
@@ -212,8 +221,9 @@ for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS):
     synthesis_parametres = params
     parametres = {}
     parametres["trial_id"] = trial_id
-    
-    output_analyzer = AnalyzerObject(PATH, SR)
+    parametres["synthesis_params"] = params
+    # print([(k, type(v)) for k,v in params.items()])
+
     spec_arr, spectral_obj = output_analyzer.get_spectral_arr(y=audio_arr)
     flatness_arr = spectral_obj.flatness(spec_arr)
     flux_arr = spectral_obj.flux(spec_arr)
@@ -237,7 +247,7 @@ for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS):
     # print("output generared and params collected!")
     
     # Logging + saving output data
-    if trial % 10 == 0:
+    if trial % 50 == 0:
         writing.save_output_data(
             output_data=audio_arr,
             sr=SR,
@@ -246,50 +256,48 @@ for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS):
             trial_output_path=trial_outputs_dir,
             trial_meta_data_path=trial_metadata_dir
             )
-        
-    # print("trial output saved")
+  
+    with open(trial_logs_path, 'a') as f:
+        f.write(json.dumps(parametres) + "\n")
 
-    if os.path.exists(trial_logs_path):
-        with open(trial_logs_path, 'r') as f:
-            all_trials = json.load(f)
-    else:
-        all_trials = [] 
-    # print("checked trial data save path exists")
-
-    all_trials.append(parametres)
-    
-    with open(trial_logs_path, 'w') as f:
-        json.dump(all_trials, f, indent=4) 
-
-    # print(f'saved trial_id: {trial_id}')   
 
 ##### Trial 4 (All parametres unfrozen)
 N_CONFIGS_4 = 200
+last_n_clusters = None
+
 
 print(f"starting trials Trial 4 (All parametres unfrozen)")
 
 for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS, N_CONFIGURATIONS*K_REPETITIONS):
     if trial % 50 == 0:
-        print(f"trial {trial}")    
+        print(f"trial {trial}")
     config_seed = trials[trial]["config_seed"]
     config_id = trials[trial]["config_id"]
     repetition_id = trials[trial]["rep_id"]
     trial_id = f"config_{config_id}_rep_{repetition_id}"
-   
+
+    # STATE parametres
+    param_config_rng = np.random.default_rng(config_seed) # unfrozen seed
+
+    densities = [int(i) for i in param_config_rng.choice(density_arrays).tolist()]
+    grain_sizes = [int(i) for i in param_config_rng.choice(grain_size_arrays).tolist()]
     n_clusters = int(param_config_rng.choice(n_clusters_arr)) 
-    kmeans_obj = analyzer.compute_kmeans(df_scaled, n_clusters=n_clusters, features=features)
-    dict_clusters = analyzer.get_cluster_dict(kmeans_obj.labels_)
-    n_states = len(grain_size_arrays) * len(density_arrays) * n_clusters
 
-    # randomize params per trial
-    densities = param_config_rng.choice(density_arrays)
-    grain_sizes = param_config_rng.choice(grain_size_arrays)
+    if not last_n_clusters == n_clusters:
+        kmeans_obj = analyzer.compute_kmeans(df_scaled, n_clusters=n_clusters, features=features)
+        dict_clusters = analyzer.get_cluster_dict(kmeans_obj.labels_)
+        n_states = len(grain_sizes) * len(densities) * n_clusters
 
+    last_n_clusters = n_clusters
+
+    # GS parametres
     window = param_config_rng.choice(windows)
     n_streams = int(param_config_rng.choice(n_streams_arr))
 
-    tpm = rand_tpm(n_states, config_seed)
-
+    # MARKOV parametre
+    conf_seed = config_seed
+    tpm = rand_tpm(n_states, conf_seed)
+  
     audio_arr, markchains, params = granulator.run_v3(
         y=analyzer.y,
         densities=densities,
@@ -301,20 +309,16 @@ for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS, N_CONFIGURATIONS*K_REPETITIONS
         n_streams=n_streams,
         window=window,
         n_clusters=n_clusters,
-        config_seed=config_seed,
+        config_seed=conf_seed,
         seed_grain_sampling=trials[trial]["cluster_sampling_seed"],
         seed_state_sampling=trials[trial]["state_sampling_seed"],
         seed_grain_pos_sampling=trials[trial]["grain_position_sampling_seed"],
     )
     synthesis_parametres = params
     parametres = {}
-    
-    config_id = trials[trial]["config_id"]
-    repetition_id = trials[trial]["rep_id"]
-    trial_id = f"config_{config_id}_rep_{repetition_id}"
     parametres["trial_id"] = trial_id
+    parametres["synthesis_params"] = params
     
-    output_analyzer = AnalyzerObject(PATH, SR)
     spec_arr, spectral_obj = output_analyzer.get_spectral_arr(y=audio_arr)
     flatness_arr = spectral_obj.flatness(spec_arr)
     flux_arr = spectral_obj.flux(spec_arr)
@@ -334,10 +338,11 @@ for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS, N_CONFIGURATIONS*K_REPETITIONS
     parametres["metrics"] = {k: float(v) for k,v in metrics.items()}
     parametres["markov_chains"] = [[int(i) for i in j] for j in markchains]
     
+
     # print("output generared and params collected!")
     
     # Logging + saving output data
-    if trial % 10 == 0:
+    if trial % 50 == 0:
         writing.save_output_data(
             output_data=audio_arr,
             sr=SR,
@@ -346,20 +351,6 @@ for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS, N_CONFIGURATIONS*K_REPETITIONS
             trial_output_path=trial_outputs_dir,
             trial_meta_data_path=trial_metadata_dir
             )
-    # print("trial output saved")
-
-    if os.path.exists(trial_logs_path):
-        with open(trial_logs_path, 'r') as f:
-            all_trials = json.load(f)
-    else:
-        all_trials = [] 
-    # print("checked trial data save path exists")
-
-    all_trials.append(parametres)
-    
-    with open(trial_logs_path, 'w') as f:
-        json.dump(all_trials, f, indent=4) 
-
-    # print(f'saved trial {trial} rep {repetition_id}')
-    # print(f"finished trial {trial_id}")
-    
+        
+    with open(trial_logs_path, 'a') as f:
+        f.write(json.dumps(parametres) + "\n")

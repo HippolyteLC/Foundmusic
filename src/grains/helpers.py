@@ -9,6 +9,24 @@ def rev_exp(size, decay_r=1):
     normalized_window = (window - window[-1])/(window[0]-window[-1])
     return normalized_window
 
+def rev_exp(size, decay_r=1):
+    """
+    Reverse exp envelope
+    """
+    if size <= 1:
+        return np.ones(size)
+
+    t = np.linspace(0, 1, size)
+    window = np.exp(-t / decay_r)
+    
+    denominator = window[0] - window[-1]
+    
+    if denominator == 0:
+        return np.ones(size)
+        
+    normalized_window = (window - window[-1]) / denominator
+    return normalized_window
+
 # TODO: write exp envelope
 
 def normalize_output(data):

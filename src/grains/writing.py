@@ -52,7 +52,7 @@ def save_output_data(output_data, sr, parametre_dict, output_dir,
     fp_wav, fp_json = get_output_id(parametre_dict)
     fp_metadata = os.path.join(meta_data_path, fp_json)
     fp_output = os.path.join(output_data_path, fp_wav)
-    print(fp_output)
+    # print(fp_output)
     with open(fp_metadata, "w") as f:
         json.dump(parametre_dict, f, indent=4)
     if not output_data is None:

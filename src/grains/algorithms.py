@@ -111,7 +111,9 @@ class MarkovGranulizer(Granulizer):
         del params["dict_clusters"]
         del params["clusters"]
         del params["config_rng"]
-        params["tpm"] = [[float(j) for j in i] for i in params["tpm"]]
+        del params["tpm"]
+        del params["states"]
+        # params["tpm"] = [[float(j) for j in i] for i in params["tpm"]]
         params["init_states"] = [int(i) for i in params["init_states"]]
         params["window"] = str(params["window"].__name__)
 

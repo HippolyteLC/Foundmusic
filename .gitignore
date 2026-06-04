@@ -12,3 +12,13 @@
 /docs/references
 /corpus/case_study_Airbus_A300B4-622R(F)
 /corpus/pilot_trial_1/
+/corpus/*/*/*.wav
+/corpus/*/*/*/*.wav
+/corpus/*/*/*.m4a
+/corpus/*/*/*/*.m4a
+/corpus/*/*/*.mp3
+/corpus/*/*/*/*.mp3
+/*/*.wav
+/*/*/*.wav
+/*/*/*/*.wav
+/*/*/*/*/*.wav
