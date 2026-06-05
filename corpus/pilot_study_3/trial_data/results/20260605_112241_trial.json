@@ -1,0 +1,62 @@
+{
+    "levine_results": {
+        "levene_stat": 25.008511913626688,
+        "levene_p": 1.3107503553121485e-09
+    },
+    "anova_results": {
+        "centroid_mean": {
+            "f_stat": 54.2772123892873,
+            "p_val": 5.60412033941996e-23,
+            "df_between": 2,
+            "df_within": 897
+        },
+        "centroid_std": {
+            "f_stat": 6.094777428250779,
+            "p_val": 0.0023490668939212538,
+            "df_between": 2,
+            "df_within": 897
+        },
+        "centroid_skewness": {
+            "f_stat": 10.833323834026851,
+            "p_val": 2.2442453761819714e-05,
+            "df_between": 2,
+            "df_within": 897
+        },
+        "flatness_mean": {
+            "f_stat": 9.59199531028032,
+            "p_val": 7.55388482857199e-05,
+            "df_between": 2,
+            "df_within": 897
+        },
+        "flatness_std": {
+            "f_stat": 7.621741334850992,
+            "p_val": 0.000522072315456874,
+            "df_between": 2,
+            "df_within": 897
+        },
+        "flatness_skewness": {
+            "f_stat": 25.154450569463865,
+            "p_val": 2.34920007565953e-11,
+            "df_between": 2,
+            "df_within": 897
+        },
+        "flux_mean": {
+            "f_stat": 25.675163067542634,
+            "p_val": 1.4351749718053858e-11,
+            "df_between": 2,
+            "df_within": 897
+        },
+        "flux_std": {
+            "f_stat": 8.086757804845417,
+            "p_val": 0.000330561570830675,
+            "df_between": 2,
+            "df_within": 897
+        },
+        "flux_skewness": {
+            "f_stat": 5.059688889970652,
+            "p_val": 0.0065299130097459445,
+            "df_between": 2,
+            "df_within": 897
+        }
+    }
+}

@@ -20,13 +20,23 @@ import umap
 # segment third 300 as General
 # segment last 600 as All
 
-STUDY_NAME = "pilot_study_2"
-TRIAL_NAME = "20260604_195844_trial"
+STUDY_NAME = "pilot_study_3"
+TRIAL_NAME = "20260605_112241_trial"
 GLOBAL_INIT_PARAMS_PATH = f"..\..\corpus\{STUDY_NAME}\\trial_data\params\\{TRIAL_NAME}.json"
 with open(GLOBAL_INIT_PARAMS_PATH, "r") as f:
     global_init_params_data = json.load(f)
 
 TRIAL_LOGS_PATH = f"..\..\corpus\{STUDY_NAME}\\trial_data\logs\\{TRIAL_NAME}.jsonl"
+
+RESULTS_DIR = f"..\..\corpus\{STUDY_NAME}\\trial_data\\results\\"
+if not os.path.exists(RESULTS_DIR):
+    os.makedirs(RESULTS_DIR)
+
+FIGURES_DIR = f"..\..\corpus\{STUDY_NAME}\\trial_data\\figures\\"
+if not os.path.exists(FIGURES_DIR):
+    os.makedirs(FIGURES_DIR)
+
+
 
 # See trials for details on trial blocks
 all_trials = []
@@ -168,24 +178,15 @@ anovas_per_metric = {}
 for col in metrics_df_markov.columns:
     anovas_per_metric[col] = output_anova_results(all_scaled_metrics_dfs, col) #{"f_statistic": f_statistic, "p_value": p_value}
 
-RESULTS_DIR = "..\..\corpus\pilot_study_2\\trial_data\\results\\"
-if not os.path.exists(RESULTS_DIR):
-    os.makedirs(RESULTS_DIR)
-RESULTS_FILE_NAME = f"{TRIAL_NAME}.json"
-
-
 results_data = {
     "levine_results": levene_output,
     "anova_results": anovas_per_metric,
 }
+RESULTS_FILE_NAME = f"{TRIAL_NAME}.json"
 with open(os.path.normpath(RESULTS_DIR + RESULTS_FILE_NAME), "w") as f:
     json.dump(results_data, f, indent=4)
 
 ### Creating + saving box_plots
-
-FIGURES_DIR = "..\..\corpus\pilot_study_2\\trial_data\\figures\\"
-if not os.path.exists(FIGURES_DIR):
-    os.makedirs(FIGURES_DIR)
 
 data_to_plot = [
     markov_flattened_matrix,
