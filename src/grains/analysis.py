@@ -112,8 +112,8 @@ class AnalyzerObject():
         Compute mean of per sample descriptor value for a grain of a certain size
         from the full descriptor array from original input. 
         Input descriptor arr contains per sample values.
-        """
-        print(f"Length y: {len(self.y)} Length descr y: {len(descriptor_arr)}")
+        """ 
+        # print(f"Length y: {len(self.y)} Length descr y: {len(descriptor_arr)}")
         
         grain_mean_descr = []
         n_grains = int(len(descriptor_arr)//grain_size)
@@ -130,7 +130,7 @@ class AnalyzerObject():
         list of dict to df of per grain features.
         df shape: (n_samples, n_features)
         """
-
+        print("Computing grain descriptors")
         spec_arr, spectral_obj = self.get_spectral_arr(y, num_freq_bins, radix_exp)
         # grain_size = int(self.sr*grain_duration)
         n_grains = int(len(self.y)//grain_size)

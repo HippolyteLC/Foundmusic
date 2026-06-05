@@ -18,7 +18,7 @@ SR = 48000
 
 # metadata path of input.wav for specific grain duration
 GRAIN_DURATION = 0.1 # 100 ms
-METADATA_PATH = f"..\..\corpus\{STUDY_NAME}\metadata\grain_{GRAIN_DURATION}_s_metadata_6d91620b.csv"
+METADATA_PATH = f"..\..\corpus\{STUDY_NAME}\metadata\grain_{GRAIN_DURATION}_s_metadata_e8f6c3ba.csv"
 
 ### Modify parametre ranges below. 
 # to change the order or ranges of specific subgroup tests change below.
@@ -34,6 +34,7 @@ MASTER_SEED = 42
 # grain analysis feature array
 # if set to None (COMMENT OUT), all the features available will be used to compute KMeans
 # features = ["rolloff", "crest"] # default
+features = None
 
 master_rng = np.random.default_rng(MASTER_SEED)
 
