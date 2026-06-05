@@ -10,15 +10,8 @@ import os
 import umap
 
 
-### 1) collect metrics from outputs 
-# - random seeds
-# - parametre configurations
-# - output metrics 
-# - trial block
-# segment first 300 as Markov
-# segment second 300 as State
-# segment third 300 as General
-# segment last 600 as All
+### IMPORTANT: every unqiue config's K repetitions are aggregated and the mean is taken
+# This is done to keep the iid property for statistical testing of variety of outputs
 
 STUDY_NAME = "pilot_study_3"
 TRIAL_NAME = "20260605_112241_trial"
@@ -36,7 +29,9 @@ FIGURES_DIR = f"..\..\corpus\{STUDY_NAME}\\trial_data\\figures\\"
 if not os.path.exists(FIGURES_DIR):
     os.makedirs(FIGURES_DIR)
 
-
+TRIALS_PARAMS_PATH = f"..\..\corpus\{STUDY_NAME}\\trial_data\params\\{TRIAL_NAME}.json"
+with open(TRIALS_PARAMS_PATH, "r") as f:
+    K_REP = json.load(f)["general_trial_parametres"]["k_repetitions"]
 
 # See trials for details on trial blocks
 all_trials = []
@@ -45,7 +40,10 @@ state_trials = []
 gs_trials = []
 all_rand_trials = []
 
+metrics_aggregate_per_config = np.zeros(3)
+
 with open(TRIAL_LOGS_PATH, "r") as f:
+    
     for idx, line in enumerate(f):
         cleaned_line = line.strip()
         if cleaned_line:
@@ -61,6 +59,31 @@ with open(TRIAL_LOGS_PATH, "r") as f:
                 all_rand_trials.append(dic)
             all_trials.append(dic)
 
+
+def aggregate_metrics_per_config(arr, k_rep=K_REP):
+    trial_aggr = []
+    metrics_keys = list(arr[0]["metrics"].keys())
+    len_metrics = len(metrics_keys)
+    aggr_metrics = np.zeros(len_metrics)
+    trial_ids = []
+    for idx, trial in enumerate(arr):
+        config_id = int(idx//k_rep) 
+        metrics_values = np.array(list(trial["metrics"].values()))
+        aggr_metrics = aggr_metrics + metrics_values
+        trial_ids.append(trial["trial_id"])
+        if ((idx + 1) % k_rep) == 0:
+            mean_metrics = aggr_metrics / k_rep
+            trial_aggr.append(
+                {
+                    "trial_ids": trial_ids,
+                    "config_id": config_id,
+                    "metrics": {metrics_keys[i]: mean_metrics[i] for i in range(len_metrics)}
+                }
+            )
+            aggr_metrics = np.zeros(len_metrics)
+            trial_ids = []
+    return trial_aggr
+
 ### Collect trial metrics data
 
 def trial_to_scaled_metric_df(list_trials, scaler=1):
@@ -68,13 +91,14 @@ def trial_to_scaled_metric_df(list_trials, scaler=1):
     Robust scaler as default for outlier values. 
     Computes scaled metrics df per trial list. 
     """
+    aggr_metric = aggregate_metrics_per_config(list_trials)
     scalers = [StandardScaler, RobustScaler, PowerTransformer, Normalizer]
     scaler_ = scalers[scaler]()
     list_metrics = []
-    for trial in list_trials:
-        metrics = trial["metrics"]
+    for config in aggr_metric:
+        metrics = config["metrics"]
         list_metrics.append({
-            "index": trial["index"],
+            # "config_id": config["config_id"],
             "centroid_mean": metrics["centroid_mean"], 
             "centroid_std": metrics["centroid_std"], 
             "centroid_skewness": metrics["centroid_skewness"], 
@@ -85,6 +109,7 @@ def trial_to_scaled_metric_df(list_trials, scaler=1):
             "flux_std": metrics["flux_std"], 
             "flux_skewness": metrics["flux_skewness"]
         })
+
     metrics_df = pd.DataFrame(list_metrics)
     metrics_to_scale = metrics_df.iloc[:,1 :]
     scaled_metrics = scaler_.fit_transform(metrics_to_scale)
@@ -133,8 +158,15 @@ gs_mean_diversity, gs_std_diversity, gs_max_diversity = compute_stats(gs_flatten
 all_rand_flattened_matrix = flatten_upper_half(compute_cosine_matrix(scaled_metrics_arr_all_rand))
 all_rand_mean_diversity, all_rand_std_diversity, all_rand_max_diversity = compute_stats(all_rand_flattened_matrix)
 
-### Get results from cosine_dist metrics (ANOVA + Levine)
+### analyze data
+# TODO: produce histograms to display the 9 output metrics per parametre subgroup. 
 
+
+### Get results from per metric One-way anova, i.e. compute 
+# 9 anovas total
+
+
+### Get results from cosine_dist metrics (ANOVA + Levine)
 
 levene_stat, levene_p = stats.levene(markov_flattened_matrix, state_flattened_matrix, gs_flattened_matrix)
 def format_p_value(p):
@@ -162,9 +194,10 @@ def output_anova_results(all_metrics_dfs, metric):
     print(f"F-Statistic:         {f_statistic:.4f}")
     print(f"p-value:             {format_p_value(p_value)}")
     if p_value < 0.05:
-        print("Interpretation:     SIGNIFICANT. The choice of parameter subgroup exerts a ")
-        print("                    verifiable structural control over this acoustic axis that ")
-        print("                    far outweighs the random seed noise of the system.")
+        
+        print("Interpretation:     SIGNIFICANT. The choice of parameter subgroup produces ")
+        print("                    statistically significant differences in this acoustic ")
+        print("                    property across configurations.")
     else:
         print("Interpretation:     NOT SIGNIFICANT. The random sampling seeds cause more ")
         print("                    variance than the actual parameter adjustments.")
