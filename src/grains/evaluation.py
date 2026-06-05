@@ -7,6 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import umap
+
 
 ### 1) collect metrics from outputs 
 # - random seeds
@@ -102,6 +104,7 @@ def compute_stats(arr):
     max_diversity  = np.max(arr)
     return mean_diversity, std_diversity, max_diversity
 
+metrics_df_all, scaled_metrics_df_all, scaled_metrics_arr_all = trial_to_scaled_metric_df(all_trials)
 metrics_df_markov, scaled_metrics_df_markov, scaled_metrics_arr_markov = trial_to_scaled_metric_df(markov_trials)
 metrics_df_state, scaled_metrics_df_state, scaled_metrics_arr_state = trial_to_scaled_metric_df(state_trials)
 metrics_df_gs, scaled_metrics_df_gs, scaled_metrics_arr_gs = trial_to_scaled_metric_df(gs_trials)
@@ -180,23 +183,81 @@ with open(os.path.normpath(RESULTS_DIR + RESULTS_FILE_NAME), "w") as f:
 ### Creating + saving box_plots
 
 FIGURES_DIR = "..\..\corpus\pilot_study_2\\trial_data\\figures\\"
-PLOT_FILE_NAME = f"{trial_name}.png"
 if not os.path.exists(FIGURES_DIR):
     os.makedirs(FIGURES_DIR)
 
 data_to_plot = [
     markov_flattened_matrix,
     state_flattened_matrix,
-    gs_flattened_matrix
+    gs_flattened_matrix,
+    all_rand_flattened_matrix
 ]
+
+PLOT_FILE_NAME = f"{trial_name}_n_box_{len(data_to_plot)}_box_plot.png"
+labels = ['Markov \nGroup', 'State-Dependent \nGroup', 'Granular Synthesis \nGroup', 'Baseline Group \n(Fully Randomized)']
 
 plt.figure(figsize=(8, 6))
 
 # Create the boxplot
-plt.boxplot(data_to_plot, labels=['Markov Group', 'State-Dependent Group', 'General Granular Synthesis Group'])
+plt.boxplot(data_to_plot, labels=labels)
 plt.ylabel('Pairwise Cosine Distance', fontsize=12)
 plt.title('Acoustic Diversity Profile across Parameter Subgroups', fontsize=14, fontweight='bold')
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_FILE_NAME), dpi=300)
-plt.show()
+# plt.show()
+
+### Creating + saving reduced diminensionality scatter plot of outputs.
+
+print("starting umap process")
+
+PLOT_FILE_NAME_PNG = f"{trial_name}_umap_acoustic_metrics_space.png"
+PLOT_FILE_NAME_PDF = f"{trial_name}_umap_acoustic_metrics_space.pdf"
+
+metrics = list(metrics_df_markov.columns)
+reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=42)
+embedding = reducer.fit_transform(scaled_metrics_arr_all)
+
+len_markov  = len(metrics_df_markov)
+len_state   = len(metrics_df_state)
+len_general = len(metrics_df_gs)
+len_random  = len(metrics_df_all_rand)
+
+group_labels = np.repeat(
+    ['Markov Group', 'State-Dependent Group', 'Granular Synthesis Group', 'Baseline Group'],
+    [len_markov, len_state, len_general, len_random]
+)
+
+metrics_df_all['parameter_group'] = group_labels
+
+metrics_df_all['umap_x'] = embedding[:, 0]
+metrics_df_all['umap_y'] = embedding[:, 1]
+
+custom_colors = {
+    'Markov Group': "#0e5b92",           # Deep Blue (Structured)
+    'State-Dependent Group': "#ff420e",        # Bright Orange (Structured)
+    'Granular Synthesis Group': '#2ca02c',       # Forest Green (Structured)
+    'Baseline Group': "#E3D927" # Muted Slate Gray (Your background control chaos)
+}
+
+print("output umap")
+
+plt.figure(figsize=(10, 8))
+sns.scatterplot(
+    x='umap_x', y='umap_y', 
+    hue='parameter_group', 
+    alpha=0.6, 
+    palette=custom_colors, 
+    data=metrics_df_all
+)
+
+plt.title('UMAP Projection of Generative Granular Acoustic Space', fontsize=14, fontweight='bold')
+plt.xlabel('UMAP Axis 1')
+plt.ylabel('UMAP Axis 2')
+plt.legend(title='Parameter Subgroup')
+plt.grid(True, alpha=0.3)
+
+plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_FILE_NAME_PDF), format='pdf', bbox_inches='tight')
+
+plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_FILE_NAME_PNG), format='png', dpi=300, bbox_inches='tight')
+
 
