@@ -12,12 +12,13 @@ import warnings
 warnings.filterwarnings('ignore', message='KMeans is known to have a memory leak on Windows with MKL')
 
 # directory + sample rate
-PATH =  "..\..\corpus\\pilot_study_3"
+STUDY_NAME = "pilot_study_3"
+PATH =  f"..\..\corpus\\{STUDY_NAME}"
 SR = 48000
 
 # metadata path of input.wav for specific grain duration
 GRAIN_DURATION = 0.1 # 100 ms
-METADATA_PATH = f"..\..\corpus\pilot_study_3\metadata\grain_{GRAIN_DURATION}_s_metadata_6d91620b.csv"
+METADATA_PATH = f"..\..\corpus\{STUDY_NAME}\metadata\grain_{GRAIN_DURATION}_s_metadata_6d91620b.csv"
 
 ### Modify parametre ranges below. 
 # to change the order or ranges of specific subgroup tests change below.

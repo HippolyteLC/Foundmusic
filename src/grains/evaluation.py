@@ -20,12 +20,13 @@ import umap
 # segment third 300 as General
 # segment last 600 as All
 
-trial_name = "20260604_195844_trial"
-global_init_params_path = f"..\..\corpus\pilot_study_2\\trial_data\params\\{trial_name}.json"
-with open(global_init_params_path, "r") as f:
+STUDY_NAME = "pilot_study_2"
+TRIAL_NAME = "20260604_195844_trial"
+GLOBAL_INIT_PARAMS_PATH = f"..\..\corpus\{STUDY_NAME}\\trial_data\params\\{TRIAL_NAME}.json"
+with open(GLOBAL_INIT_PARAMS_PATH, "r") as f:
     global_init_params_data = json.load(f)
 
-trial_logs_path = f"..\..\corpus\pilot_study_2\\trial_data\logs\\{trial_name}.jsonl"
+TRIAL_LOGS_PATH = f"..\..\corpus\{STUDY_NAME}\\trial_data\logs\\{TRIAL_NAME}.jsonl"
 
 # See trials for details on trial blocks
 all_trials = []
@@ -34,7 +35,7 @@ state_trials = []
 gs_trials = []
 all_rand_trials = []
 
-with open(trial_logs_path, "r") as f:
+with open(TRIAL_LOGS_PATH, "r") as f:
     for idx, line in enumerate(f):
         cleaned_line = line.strip()
         if cleaned_line:
@@ -170,7 +171,7 @@ for col in metrics_df_markov.columns:
 RESULTS_DIR = "..\..\corpus\pilot_study_2\\trial_data\\results\\"
 if not os.path.exists(RESULTS_DIR):
     os.makedirs(RESULTS_DIR)
-RESULTS_FILE_NAME = f"{trial_name}.json"
+RESULTS_FILE_NAME = f"{TRIAL_NAME}.json"
 
 
 results_data = {
@@ -193,7 +194,7 @@ data_to_plot = [
     all_rand_flattened_matrix
 ]
 
-PLOT_FILE_NAME = f"{trial_name}_n_box_{len(data_to_plot)}_box_plot.png"
+PLOT_FILE_NAME = f"{TRIAL_NAME}_n_box_{len(data_to_plot)}_box_plot.png"
 labels = ['Markov \nGroup', 'State-Dependent \nGroup', 'Granular Synthesis \nGroup', 'Baseline Group \n(Fully Randomized)']
 
 plt.figure(figsize=(8, 6))
@@ -210,8 +211,8 @@ plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_FILE_NAME), dpi=300)
 
 print("starting umap process")
 
-PLOT_FILE_NAME_PNG = f"{trial_name}_umap_acoustic_metrics_space.png"
-PLOT_FILE_NAME_PDF = f"{trial_name}_umap_acoustic_metrics_space.pdf"
+PLOT_FILE_NAME_PNG = f"{TRIAL_NAME}_umap_acoustic_metrics_space.png"
+PLOT_FILE_NAME_PDF = f"{TRIAL_NAME}_umap_acoustic_metrics_space.pdf"
 
 metrics = list(metrics_df_markov.columns)
 reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=42)
