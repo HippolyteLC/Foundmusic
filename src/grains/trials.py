@@ -11,6 +11,17 @@ import warnings
 
 warnings.filterwarnings('ignore', message='KMeans is known to have a memory leak on Windows with MKL')
 
+# directory + sample rate
+PATH =  "..\..\corpus\\pilot_study_3"
+SR = 48000
+
+# metadata path of input.wav for specific grain duration
+GRAIN_DURATION = 0.1 # 100 ms
+METADATA_PATH = f"..\..\corpus\pilot_study_3\metadata\grain_{GRAIN_DURATION}_s_metadata_6d91620b.csv"
+
+### Modify parametre ranges below. 
+# to change the order or ranges of specific subgroup tests change below.
+
 # Set the seeds
 N_CONFIGS_1_2_3 = 300
 N_CONFIGS_4 = 200
@@ -18,6 +29,10 @@ N_CONFIGS_4 = 200
 N_CONFIGURATIONS = N_CONFIGS_1_2_3 + N_CONFIGS_4
 K_REPETITIONS = 3
 MASTER_SEED = 42
+
+# grain analysis feature array
+# if set to None (COMMENT OUT), all the features available will be used to compute KMeans
+# features = ["rolloff", "crest"] # default
 
 master_rng = np.random.default_rng(MASTER_SEED)
 
@@ -45,9 +60,6 @@ for i in range(N_CONFIGURATIONS):
 
 ### Do the analysis of grains in a NB to visualize and choose descriptors
 
-PATH =  "..\..\corpus\\pilot_study_2"
-SR = 48000
-
 time = datetime.now().strftime("%Y%m%d_%H%M%S")
 trial_dir = os.path.normpath(PATH + f"\\trial_data\\")
 trial_logs_dir = os.path.normpath(trial_dir + "\\logs")
@@ -71,18 +83,15 @@ trial_params_path = os.path.normpath(trial_params_dir + f"\\{time}_trial.json")
 
 analyzer = AnalyzerObject(PATH, SR)
 analyzer.load_y()
-grain_duration = 0.1 # 100 ms
-grain_size = int(SR*grain_duration)
-METADATA_PATH = "..\..\corpus\pilot_trial_1\metadata\grain_0.1_s_metadata_6d91620b.csv"
+grain_size = int(SR*GRAIN_DURATION)
+
 if os.path.exists(METADATA_PATH):
     df = analyzer.load_metadata(METADATA_PATH)
 else:
     df = analyzer.compute_grain_descriptors(grain_size)
-    analyzer.save_metadata(df, grain_duration=grain_duration)
+    analyzer.save_metadata(df, grain_duration=GRAIN_DURATION)
 _, df_scaled = analyzer.scale_metadata(df, scaler=2)
-x = "rolloff"
-y = "crest"
-features = [x,y]
+
 grains = analyzer.grains(grain_size)
 granulator = MarkovGranulizer(sr=SR)
 output_analyzer = AnalyzerObject(PATH, SR)
@@ -148,8 +157,6 @@ with open(trial_params_path, "w") as f:
 
 print(f"starting trials Trial 1,2, and 3 (Sub group studies)")
 print("Trial 1: Markov, Trial 2: State, Trial 3: General")
-N_CONFIGS_1_2_3 = 300
-
 
 last_n_clusters = None
 # all_trials = []
@@ -242,10 +249,7 @@ for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS):
 
     parametres["metrics"] = {k: float(v) for k,v in metrics.items()}
     parametres["markov_chains"] = [[int(i) for i in j] for j in markchains]
-    
-
-    # print("output generared and params collected!")
-    
+        
     # Logging + saving output data
     if trial % 50 == 0:
         writing.save_output_data(
@@ -256,13 +260,12 @@ for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS):
             trial_output_path=trial_outputs_dir,
             trial_meta_data_path=trial_metadata_dir
             )
-  
+    
     with open(trial_logs_path, 'a') as f:
         f.write(json.dumps(parametres) + "\n")
 
 
 ##### Trial 4 (All parametres unfrozen)
-N_CONFIGS_4 = 200
 last_n_clusters = None
 
 
