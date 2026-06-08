@@ -254,7 +254,7 @@ for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS):
     parametres["markov_chains"] = [[int(i) for i in j] for j in markchains]
         
     # Logging + saving output data
-    if trial % 50 == 0:
+    if trial % 500 == 0:
         writing.save_output_data(
             output_data=audio_arr,
             sr=SR,
@@ -348,7 +348,7 @@ for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS, N_
     # print("output generared and params collected!")
     
     # Logging + saving output data
-    if trial % 50 == 0:
+    if trial % 500 == 0:
         writing.save_output_data(
             output_data=audio_arr,
             sr=SR,

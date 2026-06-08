@@ -22,9 +22,14 @@ def expodec(size, decay_r=1):
     """
     exp envelope. 
     """
+    if size <= 1:
+        return np.ones(size)
     t = np.linspace(0, 1, size)
     window = np.exp(t / decay_r)
-    normalized_window = (window - window[0]) / (window[-1] - window[0])
+    denominator = window[-1] - window[0]
+    if denominator == 0:
+        return np.ones(size)
+    normalized_window = (window - window[0]) / denominator
     return normalized_window
 
 def sinc_envelope(size, lobes=3):

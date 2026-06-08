@@ -300,7 +300,7 @@ def show_spectrogram(data, sr, y_axis="log", x_axis="time", title=None):
     ax.label_outer()
     fig.colorbar(img, ax=ax, format="%+2.f dB")
 
-def get_histogram(dir, df, features, n_cols=3, color='steelblue', n_bins=30):
+def get_histograms(dir, file_name, df, features, n_cols=3, color='steelblue', n_bins=30):
     """
     Plots histograms for all columns in a DataFrame into a grid with a fixed number of columns.
     - df: pandas DataFrame containing the scaled features (RobustScaling is best: index 1 for the scaler method
@@ -342,7 +342,7 @@ def get_histogram(dir, df, features, n_cols=3, color='steelblue', n_bins=30):
         axes_flat[i].set_title(f'{col} '.capitalize() + 'distribution', fontsize=11, fontweight='bold')
         
         if i % n_cols == 0: 
-            axes_flat[i].set_ylabel('Grain count')
+            axes_flat[i].set_ylabel('Number of outputs')
         else:
             axes_flat[i].set_ylabel('')
 
@@ -356,10 +356,13 @@ def get_histogram(dir, df, features, n_cols=3, color='steelblue', n_bins=30):
         fig.delaxes(axes_flat[j])
         
     plt.tight_layout()
-    output_dir = os.path.normpath(dir + "\\figures\\")
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    output_path = os.path.join(output_dir, f'hist_{n_bins}_bins_grain_dur_{grain_duration}_s' + '.png')
+    # output_dir = os.path.normpath(dir + "\\figures\\")
+    # if not os.path.exists(output_dir):
+    #     os.makedirs(output_dir)
+    if not file_name:
+        output_path = os.path.join(dir, f'output_descriptors_histograms_{n_bins}_' + '.png')
+    else:
+        output_path = os.path.join(dir, file_name)
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close()
 

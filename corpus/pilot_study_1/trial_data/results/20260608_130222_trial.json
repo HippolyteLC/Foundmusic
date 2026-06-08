@@ -1,0 +1,42 @@
+{
+    "kruskal_wallis_results": {
+        "centroid_mean": {
+            "H_stat": 375.1054223512234,
+            "p_val": 3.522836362356231e-82
+        },
+        "centroid_std": {
+            "H_stat": 183.3816473304552,
+            "p_val": 1.5107104766905022e-40
+        },
+        "centroid_skewness": {
+            "H_stat": 364.56789316103897,
+            "p_val": 6.840500209498194e-80
+        },
+        "flatness_mean": {
+            "H_stat": 309.366413721046,
+            "p_val": 6.636465138477329e-68
+        },
+        "flatness_std": {
+            "H_stat": 204.82571761966318,
+            "p_val": 3.331658989236855e-45
+        },
+        "flatness_skewness": {
+            "H_stat": 363.14366094469284,
+            "p_val": 1.3942991313016728e-79
+        },
+        "flux_mean": {
+            "H_stat": 145.13327984956337,
+            "p_val": 3.0528728063503214e-32
+        },
+        "flux_std": {
+            "H_stat": 185.1760237748366,
+            "p_val": 6.159384941107603e-41
+        },
+        "flux_skewness": {
+            "H_stat": 495.7960193573536,
+            "p_val": 2.184048718589057e-108
+        }
+    },
+    "posthoc_dunns": {
+        "centroid_mean": {
+            "p_values": 

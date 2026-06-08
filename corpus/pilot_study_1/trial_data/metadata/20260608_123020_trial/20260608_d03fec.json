@@ -1,0 +1,65 @@
+{
+    "trial_id": "config_70_rep_0",
+    "synthesis_params": {
+        "densities": [
+            100,
+            300,
+            900
+        ],
+        "grain_size": 4800,
+        "grain_sizes": [
+            48,
+            48,
+            48
+        ],
+        "config_seed": 70025,
+        "seed_grain_sampling": 77394,
+        "seed_state_sampling": 8925,
+        "seed_grain_pos_sampling": 65456,
+        "n_streams": 1,
+        "window": "rexpodec",
+        "n_clusters": 8,
+        "n_iterations": 20,
+        "delta_t_samples": 48000,
+        "init_states": [
+            39
+        ],
+        "n_states": 72
+    },
+    "metrics": {
+        "centroid_mean": 5279.7705078125,
+        "centroid_std": 1294.327392578125,
+        "centroid_skewness": -1.7817142009735107,
+        "flatness_mean": 0.49467337131500244,
+        "flatness_std": 0.1336623877286911,
+        "flatness_skewness": -1.827149510383606,
+        "flux_mean": 249.12889099121094,
+        "flux_std": 535.5828247070312,
+        "flux_skewness": 2.9724929332733154
+    },
+    "markov_chains": [
+        [
+            39,
+            66,
+            47,
+            48,
+            11,
+            14,
+            51,
+            63,
+            3,
+            42,
+            14,
+            41,
+            53,
+            37,
+            6,
+            12,
+            30,
+            20,
+            34,
+            37,
+            10
+        ]
+    ]
+}
