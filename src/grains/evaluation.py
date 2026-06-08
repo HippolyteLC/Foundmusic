@@ -161,11 +161,6 @@ all_rand_mean_diversity, all_rand_std_diversity, all_rand_max_diversity = comput
 ### analyze data
 # TODO: produce histograms to display the 9 output metrics per parametre subgroup. 
 
-
-### Get results from per metric One-way anova, i.e. compute 
-# 9 anovas total
-
-
 ### Get results from cosine_dist metrics (ANOVA + Levine)
 
 levene_stat, levene_p = stats.levene(markov_flattened_matrix, state_flattened_matrix, gs_flattened_matrix)
@@ -206,9 +201,10 @@ def output_anova_results(all_metrics_dfs, metric):
 
 all_metrics_dfs = [metrics_df_markov, metrics_df_state, metrics_df_gs]
 all_scaled_metrics_dfs = [scaled_metrics_df_markov, scaled_metrics_df_state, scaled_metrics_df_gs]
+metrics_labels = metrics_df_markov.columns
 
 anovas_per_metric = {}
-for col in metrics_df_markov.columns:
+for col in metrics_labels:
     anovas_per_metric[col] = output_anova_results(all_scaled_metrics_dfs, col) #{"f_statistic": f_statistic, "p_value": p_value}
 
 results_data = {

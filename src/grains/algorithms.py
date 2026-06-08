@@ -1,6 +1,6 @@
 import numpy as np
 import soundfile as sf
-from helpers import normalize_output, rev_exp
+from helpers import normalize_output
 
 class Granulizer():
     def __init__(self, sr):

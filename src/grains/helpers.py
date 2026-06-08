@@ -1,33 +1,41 @@
 import numpy as np
 
-def rev_exp(size, decay_r=1):
+def rexpodec(size, decay_r=1):
     """
     Reverse exp envelope. 
     """
-    t = np.linspace(0,1,size)
-    window = np.exp(-t/decay_r)
-    normalized_window = (window - window[-1])/(window[0]-window[-1])
-    return normalized_window
-
-def rev_exp(size, decay_r=1):
-    """
-    Reverse exp envelope
-    """
     if size <= 1:
         return np.ones(size)
+    
+    t = np.linspace(0,1,size)
 
-    t = np.linspace(0, 1, size)
-    window = np.exp(-t / decay_r)
-    
+    window = np.exp(-t/decay_r)
+
     denominator = window[0] - window[-1]
-    
     if denominator == 0:
         return np.ones(size)
         
     normalized_window = (window - window[-1]) / denominator
     return normalized_window
 
-# TODO: write exp envelope
+def expodec(size, decay_r=1):
+    """
+    exp envelope. 
+    """
+    t = np.linspace(0, 1, size)
+    window = np.exp(t / decay_r)
+    normalized_window = (window - window[0]) / (window[-1] - window[0])
+    return normalized_window
+
+def sinc_envelope(size, lobes=3):
+    """
+    Sinc envelope with n number of lobes on each side. 
+    Taken from Roads Microsounds
+    """
+    t = np.linspace(-lobes, lobes, size)
+    
+    window = np.sinc(t)
+    return window
 
 def normalize_output(data):
     """

@@ -300,6 +300,69 @@ def show_spectrogram(data, sr, y_axis="log", x_axis="time", title=None):
     ax.label_outer()
     fig.colorbar(img, ax=ax, format="%+2.f dB")
 
+def get_histogram(dir, df, features, n_cols=3, color='steelblue', n_bins=30):
+    """
+    Plots histograms for all columns in a DataFrame into a grid with a fixed number of columns.
+    - df: pandas DataFrame containing the scaled features (RobustScaling is best: index 1 for the scaler method
+    from AnalyzerObject)
+    - features: the descriptor columns that should be included in the histograms
+    - n_cols: int, number of columns in the subplot grid
+    - color: str, color for all histograms
+    - bins: int, number of bins for the histograms
+    saves to figures 
+    """
+    
+    df = df[features]# consider only descriptors
+    feature_names = df.columns
+    n_features = len(feature_names)
+    n_rows = int(np.ceil(n_features / n_cols))
+    
+    fig, axes = plt.subplots(
+        n_rows, 
+        n_cols, 
+        figsize=(n_cols * 4, n_rows * 3.5), 
+        sharex=False, 
+        sharey=False
+    )
+
+    if n_features == 1: #handle 1d arr
+        axes_flat = np.array([axes])
+    else:
+        axes_flat = axes.flatten()
+    
+    for i, col in enumerate(feature_names):
+        sns.histplot(
+            data=df, 
+            x=col, 
+            kde=False, # True for a fitted line     
+            ax=axes_flat[i], 
+            color=color,     
+            bins=n_bins
+        )
+        axes_flat[i].set_title(f'{col} '.capitalize() + 'distribution', fontsize=11, fontweight='bold')
+        
+        if i % n_cols == 0: 
+            axes_flat[i].set_ylabel('Grain count')
+        else:
+            axes_flat[i].set_ylabel('')
+
+        if (i+n_cols) // (n_rows * n_cols) == 1:
+            axes_flat[i].xaxis.get_label().set_text('Scaled descriptor value')
+        else:
+            axes_flat[i].xaxis.get_label().set_text('')
+
+    # If the number of features doesn't perfectly fill the last row, delete the empty axes
+    for j in range(i + 1, len(axes_flat)):
+        fig.delaxes(axes_flat[j])
+        
+    plt.tight_layout()
+    output_dir = os.path.normpath(dir + "\\figures\\")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_path = os.path.join(output_dir, f'hist_{n_bins}_bins_grain_dur_{grain_duration}_s' + '.png')
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
 def get_grain_distr_histograms(dir, df, features, grain_duration, n_cols=3, color='steelblue', n_bins=30):
     """
     Plots histograms for all columns in a DataFrame into a grid with a fixed number of columns.

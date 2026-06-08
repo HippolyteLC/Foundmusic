@@ -1,7 +1,7 @@
 import numpy as np
 from algorithms import MarkovGranulizer, rand_tpm
 from analysis import AnalyzerObject
-from helpers import rev_exp
+from helpers import expodec, rexpodec, sinc_envelope
 import writing
 import json 
 import os
@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings('ignore', message='KMeans is known to have a memory leak on Windows with MKL')
 
 # directory + sample rate
-STUDY_NAME = "pilot_study_3"
+STUDY_NAME = "pilot_study_1"
 PATH =  f"..\..\corpus\\{STUDY_NAME}"
 SR = 48000
 
@@ -24,11 +24,12 @@ METADATA_PATH = f"..\..\corpus\{STUDY_NAME}\metadata\grain_{GRAIN_DURATION}_s_me
 # to change the order or ranges of specific subgroup tests change below.
 
 # Set the seeds
-N_CONFIGS_1_2_3 = 300
-N_CONFIGS_4 = 200
+N_CONFIGS_PER_PARAMGROUP = 200
+N_PARAM_GROUPS = 3
+N_CONFIGS_ALL_RAND = 400
+N_CONFIGURATIONS = (N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS) + N_CONFIGS_ALL_RAND
+K_REPETITIONS = 5
 
-N_CONFIGURATIONS = N_CONFIGS_1_2_3 + N_CONFIGS_4
-K_REPETITIONS = 3
 MASTER_SEED = 42
 
 # grain analysis feature array
@@ -101,7 +102,7 @@ output_analyzer = AnalyzerObject(PATH, SR)
 ### Set the parametre value ranges
 
 n_streams_arr = [1,2,4,16]
-windows = [np.hanning, rev_exp] # add exp
+windows = [np.hanning, expodec, rexpodec, sinc_envelope] # add exp
 density_arrays = [
     [1, 1, 1], # uniform low
     [1, 3, 9], # low increasing (x3)
@@ -162,16 +163,16 @@ print("Trial 1: Markov, Trial 2: State, Trial 3: General")
 
 last_n_clusters = None
 # all_trials = []
-for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS):
-    if trial % 50 == 0:
-        print(f"trial {trial}")
+for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS):
     config_seed = trials[trial]["config_seed"]
     config_id = trials[trial]["config_id"]
     repetition_id = trials[trial]["rep_id"]
     trial_id = f"config_{config_id}_rep_{repetition_id}"
+    if trial % 50 == 0:
+        print(f"trial: {trial_id}")
 
     # STATE parametres
-    if 100 <= config_id < 200:
+    if N_CONFIGS_PER_PARAMGROUP <= config_id < N_CONFIGS_PER_PARAMGROUP*2:
         param_config_rng = np.random.default_rng(config_seed) # unfrozen seed
 
         densities = [int(i) for i in param_config_rng.choice(density_arrays).tolist()]
@@ -192,7 +193,7 @@ for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS):
     last_n_clusters = n_clusters
 
     # GS parametres
-    if 200 <= config_id < 300: 
+    if N_CONFIGS_PER_PARAMGROUP*2 <= config_id < N_CONFIGS_PER_PARAMGROUP*3: 
         param_config_rng = np.random.default_rng(config_seed) # unfrozen seed
 
         window = param_config_rng.choice(windows)
@@ -204,7 +205,7 @@ for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS):
         n_streams = int(param_config_rng.choice(n_streams_arr))
 
     # MARKOV parametre
-    if config_id < 100:
+    if config_id < N_CONFIGS_PER_PARAMGROUP:
         conf_seed = config_seed
         tpm = rand_tpm(n_states, conf_seed)
     else:       
@@ -273,13 +274,13 @@ last_n_clusters = None
 
 print(f"starting trials Trial 4 (All parametres unfrozen)")
 
-for trial in range(N_CONFIGS_1_2_3*K_REPETITIONS, N_CONFIGURATIONS*K_REPETITIONS):
-    if trial % 50 == 0:
-        print(f"trial {trial}")
+for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS, N_CONFIGURATIONS * K_REPETITIONS):
     config_seed = trials[trial]["config_seed"]
     config_id = trials[trial]["config_id"]
     repetition_id = trials[trial]["rep_id"]
     trial_id = f"config_{config_id}_rep_{repetition_id}"
+    if trial % 50 == 0:
+        print(f"trial: {trial_id}")
 
     # STATE parametres
     param_config_rng = np.random.default_rng(config_seed) # unfrozen seed

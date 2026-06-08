@@ -1,0 +1,55 @@
+{
+    "n_streams_arr": [
+        1,
+        2,
+        4,
+        16
+    ],
+    "windows": [
+        "hanning"
+    ],
+    "density_arrays": [
+        [
+            1,
+            2,
+            4
+        ],
+        [
+            1,
+            2,
+            4
+        ],
+        [
+            1,
+            2,
+            4
+        ]
+    ],
+    "grain_size_arrays": [
+        [
+            40,
+            100
+        ],
+        [
+            40,
+            100
+        ],
+        [
+            40,
+            100
+        ]
+    ],
+    "n_clusters_arr": [
+        2,
+        3,
+        5,
+        8
+    ],
+    "features": [
+        "rolloff",
+        "crest"
+    ],
+    "n_configurations": 6,
+    "k_repetitions": 2,
+    "sr": 48000
+}
