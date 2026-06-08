@@ -224,7 +224,8 @@ def compute_posthoc_dunns(dfs, metric):
     data = [dfs[0][metric], dfs[1][metric], dfs[2][metric]]
     p_vals = posthoc_dunn(data, p_adjust="holm")
     return p_vals
-# all_metrics_dfs = [metrics_df_markov, metrics_df_state, metrics_df_gs]
+
+all_param_group_titles = ['Markov Group', 'State-Dependent Group', 'Granular Synthesis Group']
 all_scaled_metrics_dfs = [
     df_scaled_trials_aggregated[:200], 
     df_scaled_trials_aggregated[200:400], 
@@ -239,8 +240,12 @@ anovas_per_metric = {}
 for col in metrics_labels:
     # anovas_per_metric[col] = output_anova_results(all_scaled_metrics_dfs, col) #{"f_statistic": f_statistic, "p_value": p_value}
     krusal_wallis_per_metric[col] = output_kruskal_wallis_results(all_scaled_metrics_dfs, col)
+    p_val_matrix = compute_posthoc_dunns(all_scaled_metrics_dfs, col)
+    p_val_flat = flatten_upper_half(p_val_matrix) # output is indices [(0,1), (0,2), (1,2)]
+    # which itself then corresponds to p_val between markov and state, markov and gs, and state and gs
+    # print(p_vals)
     posthoc_dunns_per_metric[col] = {
-        "p_values": compute_posthoc_dunns(all_scaled_metrics_dfs, col)
+        group: float(p_val_flat[i]) for i, group in enumerate(all_param_group_titles)
     }
 
 results_data = {
