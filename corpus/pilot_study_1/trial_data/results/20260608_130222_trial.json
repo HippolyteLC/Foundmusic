@@ -39,4 +39,49 @@
     },
     "posthoc_dunns": {
         "centroid_mean": {
-            "p_values": 
+            "markov_state": 6.6864813183051675e-81,
+            "markov_gs": 1.851123443229432e-34,
+            "state_gs": 9.878666687546654e-12
+        },
+        "centroid_std": {
+            "markov_state": 0.09579819283184048,
+            "markov_gs": 3.210819319233973e-35,
+            "state_gs": 6.46583181563298e-27
+        },
+        "centroid_skewness": {
+            "markov_state": 4.080732818211492e-68,
+            "markov_gs": 6.155194489884735e-53,
+            "state_gs": 0.032045465417070235
+        },
+        "flatness_mean": {
+            "markov_state": 8.848536844151776e-64,
+            "markov_gs": 3.812622438128844e-36,
+            "state_gs": 1.5829266921069483e-05
+        },
+        "flatness_std": {
+            "markov_state": 0.13368970487681378,
+            "markov_gs": 1.3557816524694051e-38,
+            "state_gs": 1.0876715935332068e-30
+        },
+        "flatness_skewness": {
+            "markov_state": 5.0153041207803646e-71,
+            "markov_gs": 2.7961618765371216e-48,
+            "state_gs": 0.0012246659529370138
+        },
+        "flux_mean": {
+            "markov_state": 7.936098575599728e-10,
+            "markov_gs": 6.248836799644979e-33,
+            "state_gs": 7.08751186460811e-09
+        },
+        "flux_std": {
+            "markov_state": 1.1222085332631376e-41,
+            "markov_gs": 5.5003691080296195e-11,
+            "state_gs": 3.6234040253460826e-12
+        },
+        "flux_skewness": {
+            "markov_state": 2.3538335464049928e-32,
+            "markov_gs": 4.274719018604239e-25,
+            "state_gs": 3.504378067481115e-109
+        }
+    }
+}

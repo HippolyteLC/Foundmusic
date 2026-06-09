@@ -6,6 +6,7 @@ from scipy.spatial.distance import cosine
 import scipy.stats as stats
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors  
 import seaborn as sns
 import os
 import umap
@@ -225,7 +226,7 @@ def compute_posthoc_dunns(dfs, metric):
     p_vals = posthoc_dunn(data, p_adjust="holm")
     return p_vals
 
-all_param_group_titles = ['Markov Group', 'State-Dependent Group', 'Granular Synthesis Group']
+pairwise_groups = ['markov_state', 'markov_gs', 'state_gs']
 all_scaled_metrics_dfs = [
     df_scaled_trials_aggregated[:200], 
     df_scaled_trials_aggregated[200:400], 
@@ -241,11 +242,15 @@ for col in metrics_labels:
     # anovas_per_metric[col] = output_anova_results(all_scaled_metrics_dfs, col) #{"f_statistic": f_statistic, "p_value": p_value}
     krusal_wallis_per_metric[col] = output_kruskal_wallis_results(all_scaled_metrics_dfs, col)
     p_val_matrix = compute_posthoc_dunns(all_scaled_metrics_dfs, col)
-    p_val_flat = flatten_upper_half(p_val_matrix) # output is indices [(0,1), (0,2), (1,2)]
+    # print("PVAL:", p_val_matrix)
+    # for row in p_val_matrix:
+    #     print(type(row), row)
+    #     break
+    p_val_flat = flatten_upper_half(p_val_matrix.to_numpy()) # output is indices [(0,1), (0,2), (1,2)]
     # which itself then corresponds to p_val between markov and state, markov and gs, and state and gs
     # print(p_vals)
     posthoc_dunns_per_metric[col] = {
-        group: float(p_val_flat[i]) for i, group in enumerate(all_param_group_titles)
+        group: float(p_val_flat[i]) for i, group in enumerate(pairwise_groups)
     }
 
 results_data = {
@@ -370,27 +375,34 @@ plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_3D_FILE_NAME_PNG), format='png',
 ### Trying HEXBINS instead of scatterplots
 
 
-HEXBIN_FILE_NAME = "PCA_hexbin"
+HEXBIN_FILE_NAME = "\\PCA_hexbin"
 
 pca_obj = PCA(n_components=2)
 reduced_data = pca_obj.fit_transform(arr_scaled_trials_aggregated)
-
+print(arr_scaled_trials_aggregated.shape, reduced_data.shape)
 x = reduced_data.T[0]
 y = reduced_data.T[1]
 
-xlim = x.min(), x.max()
-ylim = y.min(), y.max()
+# xlim = x.min(), x.max()
+# ylim = y.min(), y.max()
 
-fig, (ax0, ax1) = plt.subplots(ncols=2, sharey=True, figsize=(9, 4))
+x_min, x_max = np.percentile(x, [0.5, 99.5])
+y_min, y_max = np.percentile(y, [0.5, 99.5])
+x_pad = (x_max - x_min) * 0.05
+y_pad = (y_max - y_min) * 0.05
+xlim = (x_min - x_pad, x_max + x_pad)
+ylim = (y_min - y_pad, y_max + y_pad)
 
-hb = ax0.hexbin(x, y, gridsize=50, cmap='inferno')
+fig, (ax0, ax1) = plt.subplots(ncols=2, sharey=True, figsize=(11, 4))
+
+hb0 = ax0.hexbin(x, y, gridsize=20, cmap='inferno', mincnt=1)
 ax0.set(xlim=xlim, ylim=ylim)
 ax0.set_title("Hexagon binning from PCA embeddings of 9D outputs.")
-cb = fig.colorbar(hb, ax=ax0, label='counts')
+cb0 = fig.colorbar(hb0, ax=ax0, label='counts')
 
-hb = ax1.hexbin(x, y, gridsize=50, bins='log', cmap='inferno')
+hb1 = ax1. hexbin(x, y, gridsize=20, bins='log', mincnt=1, cmap='inferno')
 ax1.set(xlim=xlim, ylim=ylim)
 ax1.set_title("With a log color scale")
-cb = fig.colorbar(hb, ax=ax1, label='counts')
-
-plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_3D_FILE_NAME_PNG), format='png', dpi=300, bbox_inches='tight')
+cb1 = fig.colorbar(hb1, ax=ax1, label='log10(counts)', format='$10^{%.1f}$')
+plt.tight_layout()
+plt.savefig(os.path.normpath(FIGURES_DIR + HEXBIN_FILE_NAME + ".png"), format='png', dpi=300, bbox_inches='tight')
