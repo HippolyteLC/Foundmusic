@@ -10,7 +10,7 @@ import matplotlib.colors as colors
 import seaborn as sns
 import os
 import umap
-from analysis import get_histograms
+from analysis import get_histograms, get_scatter_plt
 from scikit_posthocs import posthoc_dunn
 
 ###_____________________________________________________________________________###
@@ -294,9 +294,9 @@ plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_FILE_NAME), dpi=300)
 
 print("starting umap process")
 
-PLOT_FILE_NAME_PNG = f"umap_acoustic_metrics_space.png"
-PLOT_FILE_NAME_PDF = f"umap_acoustic_metrics_space.pdf"
-PLOT_3D_FILE_NAME_PNG = f"umap_3d_acoustic_metrics_space.png"
+PLOT_FILE_PATH_PNG = os.path.normpath(FIGURES_DIR + "umap_acoustic_metrics_space.png") 
+PLOT_FILE_PATH_PDF = os.path.normpath(FIGURES_DIR + "umap_acoustic_metrics_space.pdf") 
+PLOT_3D_FILE_path_PNG = os.path.normpath(FIGURES_DIR + "umap_3D_acoustic_metrics_space.png") 
 
 reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=42)
 embedding = reducer.fit_transform(arr_scaled_trials_aggregated)
@@ -338,8 +338,8 @@ plt.ylabel('UMAP Axis 2')
 plt.legend(title='Parameter Subgroup')
 plt.grid(True, alpha=0.3)
 
-plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_FILE_NAME_PDF), format='pdf', bbox_inches='tight')
-plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_FILE_NAME_PNG), format='png', dpi=300, bbox_inches='tight')
+plt.savefig(PLOT_FILE_PATH_PDF, format='pdf', bbox_inches='tight')
+plt.savefig(PLOT_FILE_PATH_PNG, format='png', dpi=300, bbox_inches='tight')
 
 reducer = umap.UMAP(n_components=3, n_neighbors=15, min_dist=0.1, random_state=42)
 embedding = reducer.fit_transform(arr_scaled_trials_aggregated)
@@ -368,14 +368,15 @@ ax.set_ylabel('UMAP Axis 2')
 ax.set_zlabel('UMAP Axis 3')
 ax.legend(title='Parameter Subgroup')
 
-plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_3D_FILE_NAME_PNG), format='png', dpi=300, bbox_inches='tight')
+plt.savefig(PLOT_3D_FILE_path_PNG, format='png', dpi=300, bbox_inches='tight')
 
 ###_____________________________________________________________________________###
 ###_____________________________________________________________________________###
-### Trying HEXBINS instead of scatterplots
+### Trying HEXBINS instead + scatterplots
 
 
-HEXBIN_FILE_NAME = "\\PCA_hexbin"
+HEXBIN_FILE_NAME = os.path.normpath(FIGURES_DIR + "\\PCA_hexbin.png") 
+SCATTER_PLOT_FILE_PATH = os.path.normpath(FIGURES_DIR + "\\PCA_scatter_plot.png") 
 
 pca_obj = PCA(n_components=2)
 reduced_data = pca_obj.fit_transform(arr_scaled_trials_aggregated)
@@ -383,26 +384,34 @@ print(arr_scaled_trials_aggregated.shape, reduced_data.shape)
 x = reduced_data.T[0]
 y = reduced_data.T[1]
 
+c = ['tab:blue', 'tab:orange', 'tab:green']
+data = [[x[:200],y[:200]], [x[200:400],y[200:400]],[x[400:600],y[400:600]],[x[600:],y[600:]]]
+get_scatter_plt(file_path=SCATTER_PLOT_FILE_PATH,
+             data=data, xlabel="PCA component 1", ylabel="PCA component 2", 
+             title="Output 9D metrics PCA components (2) scatter plot", 
+             colors=c, labels= labels)
+
+
 # xlim = x.min(), x.max()
 # ylim = y.min(), y.max()
 
-x_min, x_max = np.percentile(x, [0.5, 99.5])
-y_min, y_max = np.percentile(y, [0.5, 99.5])
-x_pad = (x_max - x_min) * 0.05
-y_pad = (y_max - y_min) * 0.05
-xlim = (x_min - x_pad, x_max + x_pad)
-ylim = (y_min - y_pad, y_max + y_pad)
+# x_min, x_max = np.percentile(x, [0.5, 99.5])
+# y_min, y_max = np.percentile(y, [0.5, 99.5])
+# x_pad = (x_max - x_min) * 0.05
+# y_pad = (y_max - y_min) * 0.05
+# xlim = (x_min - x_pad, x_max + x_pad)
+# ylim = (y_min - y_pad, y_max + y_pad)
 
-fig, (ax0, ax1) = plt.subplots(ncols=2, sharey=True, figsize=(11, 4))
+# fig, (ax0, ax1) = plt.subplots(ncols=2, sharey=True, figsize=(11, 4))
 
-hb0 = ax0.hexbin(x, y, gridsize=20, cmap='inferno', mincnt=1)
-ax0.set(xlim=xlim, ylim=ylim)
-ax0.set_title("Hexagon binning from PCA embeddings of 9D outputs.")
-cb0 = fig.colorbar(hb0, ax=ax0, label='counts')
+# hb0 = ax0.hexbin(x, y, gridsize=20, cmap='inferno', mincnt=1)
+# ax0.set(xlim=xlim, ylim=ylim)
+# ax0.set_title("Hexagon binning from PCA embeddings of 9D outputs.")
+# cb0 = fig.colorbar(hb0, ax=ax0, label='counts')
 
-hb1 = ax1. hexbin(x, y, gridsize=20, bins='log', mincnt=1, cmap='inferno')
-ax1.set(xlim=xlim, ylim=ylim)
-ax1.set_title("With a log color scale")
-cb1 = fig.colorbar(hb1, ax=ax1, label='log10(counts)', format='$10^{%.1f}$')
-plt.tight_layout()
-plt.savefig(os.path.normpath(FIGURES_DIR + HEXBIN_FILE_NAME + ".png"), format='png', dpi=300, bbox_inches='tight')
+# hb1 = ax1.hexbin(x, y, gridsize=20, bins='log', mincnt=1, cmap='inferno')
+# ax1.set(xlim=xlim, ylim=ylim)
+# ax1.set_title("With a log color scale")
+# cb1 = fig.colorbar(hb1, ax=ax1, label='log10(counts)', format='$10^{%.1f}$')
+# plt.tight_layout()
+# plt.savefig(os.path.normpath(FIGURES_DIR + HEXBIN_FILE_NAME + ".png"), format='png', dpi=300, bbox_inches='tight')

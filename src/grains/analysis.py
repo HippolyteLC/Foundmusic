@@ -284,6 +284,30 @@ def show_scatter_plt(x, y, x_label, y_label, title, alpha=0.7):
     plt.title(title)
     plt.grid(True, linestyle='--', alpha=alpha)
     plt.show()
+
+def get_scatter_plt(file_path, data, xlabel, ylabel, title, colors, labels, alpha=0.7):
+    """ 
+    Show scatter plot for two arrays. Add title, x and y labels. 
+    """
+    fig, ax = plt.subplots()
+    data =  np.array(data)
+    if len(data.shape) >= 3:
+        for idx in range(len(data)):
+            x,y  = data[idx]
+            c = colors[idx]
+            ax.scatter(x,y,c=c, label=labels[idx], alpha=alpha,
+                       edgecolors=None)
+    else:
+        x, y = data
+        ax.scatter(x, y, alpha=alpha)
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
+    ax.set_title(title)
+    ax.grid(True, linestyle='--', alpha=alpha)
+    ax.legend()
+    if file_path:
+        plt.savefig(file_path, format='png', dpi=300,bbox_inches='tight')
+        
     
 def show_spectrogram(data, sr, y_axis="log", x_axis="time", title=None):
     """ 
