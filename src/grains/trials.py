@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings('ignore', message='KMeans is known to have a memory leak on Windows with MKL')
 
 # directory + sample rate
-STUDY_NAME = "pilot_study_1"
+STUDY_NAME = "pilot_study_2"
 PATH =  f"..\..\corpus\\{STUDY_NAME}"
 SR = 48000
 

@@ -291,7 +291,7 @@ def get_scatter_plt(file_path, data, xlabel, ylabel, title, colors, labels, alph
     """
     fig, ax = plt.subplots()
     data =  np.array(data)
-    if len(data.shape) >= 3:
+    if len(data) >= 3:
         for idx in range(len(data)):
             x,y  = data[idx]
             c = colors[idx]
@@ -307,9 +307,9 @@ def get_scatter_plt(file_path, data, xlabel, ylabel, title, colors, labels, alph
     ax.legend()
     if file_path:
         plt.savefig(file_path, format='png', dpi=300,bbox_inches='tight')
-        
+
     
-def show_spectrogram(data, sr, y_axis="log", x_axis="time", title=None):
+def get_spectrogram(file_path, data, sr, y_axis="log", x_axis="time", title=None):
     """ 
     y axis can be linear or log scale for power and magnitude respectively, 
     typically log is used
@@ -323,6 +323,9 @@ def show_spectrogram(data, sr, y_axis="log", x_axis="time", title=None):
     ax.set(title=f'{amplitude_type} spectrogram')
     ax.label_outer()
     fig.colorbar(img, ax=ax, format="%+2.f dB")
+    plt.tight_layout()
+
+    plt.savefig(file_path, format='png')#, dpi=300,bbox_inches='tight')
 
 def get_histograms(dir, file_name, df, features, n_cols=3, color='steelblue', n_bins=30):
     """

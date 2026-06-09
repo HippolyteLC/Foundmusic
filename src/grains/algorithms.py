@@ -82,9 +82,7 @@ class MarkovGranulizer(Granulizer):
             delta_t_samples = grain_size * 10
 
         n_states = n_clusters * len(densities) * len(grain_sizes)
-        # print(n_clusters, densities, grain_sizes)
-        # print("N states:", n_states)
-        # print("row of tpm", tpm[0].shape)
+
         config_rng = np.random.default_rng(config_seed)
         init_states = [int(config_rng.integers(0, n_states)) for _ in range(n_streams)]
 

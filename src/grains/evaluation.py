@@ -10,8 +10,9 @@ import matplotlib.colors as colors
 import seaborn as sns
 import os
 import umap
-from analysis import get_histograms, get_scatter_plt
+from analysis import get_histograms, get_scatter_plt, get_spectrogram
 from scikit_posthocs import posthoc_dunn
+import audioflux as af
 
 ###_____________________________________________________________________________###
 ###_____________________________________________________________________________###
@@ -38,8 +39,15 @@ TRIALS_PARAMS_PATH = f"..\..\corpus\{STUDY_NAME}\\trial_data\params\\{TRIAL_NAME
 with open(TRIALS_PARAMS_PATH, "r") as f:
     data_dict = json.load(f)
     K_REP = data_dict["general_trial_parametres"]["k_repetitions"]
+    SR = data_dict["general_trial_parametres"]["sr"]
     # N_CONFIGS_PER_PARAM_GROUP = data_dict["general_trial_parametres"][""]
     # TODO: added dynamic loading of configs per group
+
+### Analyzing the input 
+# TRIAL_INPUT = f"..\..\corpus\{STUDY_NAME}\\input.wav"
+# INPUT_SPECTROGRAM_PATH = os.path.normpath(FIGURES_DIR + "input_spectrogram.png")
+# y,_ = af.read(TRIAL_INPUT, samplate=SR)
+# get_spectrogram(INPUT_SPECTROGRAM_PATH,y,SR)
 
 # See trials for details on trial blocks
 all_trials = []
@@ -260,6 +268,13 @@ results_data = {
     "posthoc_dunns": posthoc_dunns_per_metric
 }
 
+kruskal_df = pd.DataFrame(results_data['kruskal_wallis_results']).T
+kruskal_df.to_csv(os.path.normpath(RESULTS_DIR + f'{TRIAL_NAME}_kruskal_results.csv'))
+
+posthoc_df = pd.DataFrame(results_data['posthoc_dunns']).T
+posthoc_df.to_csv(os.path.normpath(RESULTS_DIR + f'{TRIAL_NAME}_posthoc_results.csv'))
+
+
 RESULTS_FILE_NAME = f"{TRIAL_NAME}.json"
 with open(os.path.normpath(RESULTS_DIR + RESULTS_FILE_NAME), "w") as f:
     json.dump(results_data, f, indent=4)
@@ -275,18 +290,17 @@ data_to_plot = [
     all_rand_flattened_matrix
 ]
 
-PLOT_FILE_NAME = f"{len(data_to_plot)}_box_plot.png"
+# PLOT_FILE_NAME = f"{len(data_to_plot)}_box_plot.png"
 labels = ['Markov \nGroup', 'State-Dependent \nGroup', 'Granular Synthesis \nGroup', 'Baseline Group \n(Fully Randomized)']
 
-plt.figure(figsize=(8, 6))
+# plt.figure(figsize=(8, 6))
 
-# Create the boxplot
-plt.boxplot(data_to_plot, labels=labels)
-plt.ylabel('Pairwise Cosine Distance', fontsize=12)
-plt.title('Acoustic Diversity Profile across Parameter Subgroups', fontsize=14, fontweight='bold')
-plt.grid(axis='y', linestyle='--', alpha=0.7)
-plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_FILE_NAME), dpi=300)
-# plt.show()
+# # Create the boxplot
+# plt.boxplot(data_to_plot, labels=labels)
+# plt.ylabel('Pairwise Cosine Distance', fontsize=12)
+# plt.title('Acoustic Diversity Profile across Parameter Subgroups', fontsize=14, fontweight='bold')
+# plt.grid(axis='y', linestyle='--', alpha=0.7)
+# plt.savefig(os.path.normpath(FIGURES_DIR + PLOT_FILE_NAME), dpi=300)
 
 ###_____________________________________________________________________________###
 ###_____________________________________________________________________________###
@@ -299,7 +313,7 @@ PLOT_FILE_PATH_PDF = os.path.normpath(FIGURES_DIR + "umap_acoustic_metrics_space
 PLOT_3D_FILE_path_PNG = os.path.normpath(FIGURES_DIR + "umap_3D_acoustic_metrics_space.png") 
 
 reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=42)
-embedding = reducer.fit_transform(arr_scaled_trials_aggregated)
+embedding = reducer.fit_transform(arr_scaled_trials_aggregated[:600])
 
 len_markov  = 200
 len_state   = 200
@@ -307,8 +321,8 @@ len_general = 200
 len_random  = 400
 
 group_labels = np.repeat(
-    ['Markov Group', 'State-Dependent Group', 'Granular Synthesis Group', 'Baseline Group'],
-    [len_markov, len_state, len_general, len_random]
+    ['Markov Group', 'State-Dependent Group', 'Granular Synthesis Group'], #, 'Baseline Group'],
+    [len_markov, len_state, len_general]#, len_random]
 )
 
 df_scaled_trials_aggregated['parameter_group'] = group_labels
@@ -317,9 +331,9 @@ df_scaled_trials_aggregated['umap_x'] = embedding[:, 0]
 df_scaled_trials_aggregated['umap_y'] = embedding[:, 1]
 
 custom_colors = {
-    'Markov Group': "#1f77b4",             
-    'State-Dependent Group': "#e377c2",    
-    'Granular Synthesis Group': '#2ca02c', 
+    'Markov Group': "#6f24b1",             
+    'State-Dependent Group': "#daca12",    
+    'Granular Synthesis Group': "#24de13", 
     'Baseline Group': "#7f7f7f"            
 }
 
@@ -341,55 +355,55 @@ plt.grid(True, alpha=0.3)
 plt.savefig(PLOT_FILE_PATH_PDF, format='pdf', bbox_inches='tight')
 plt.savefig(PLOT_FILE_PATH_PNG, format='png', dpi=300, bbox_inches='tight')
 
-reducer = umap.UMAP(n_components=3, n_neighbors=15, min_dist=0.1, random_state=42)
-embedding = reducer.fit_transform(arr_scaled_trials_aggregated)
+# reducer = umap.UMAP(n_components=3, n_neighbors=15, min_dist=0.1, random_state=42)
+# embedding = reducer.fit_transform(arr_scaled_trials_aggregated)
 
-df_scaled_trials_aggregated['umap_x'] = embedding[:, 0]
-df_scaled_trials_aggregated['umap_y'] = embedding[:, 1]
-df_scaled_trials_aggregated['umap_z'] = embedding[:, 2]
+# df_scaled_trials_aggregated['umap_x'] = embedding[:, 0]
+# df_scaled_trials_aggregated['umap_y'] = embedding[:, 1]
+# df_scaled_trials_aggregated['umap_z'] = embedding[:, 2]
 
-fig = plt.figure(figsize=(10, 8))
-ax = fig.add_subplot(111, projection='3d')
+# fig = plt.figure(figsize=(10, 8))
+# ax = fig.add_subplot(111, projection='3d')
 
-for group, color in custom_colors.items():
-    mask = df_scaled_trials_aggregated['parameter_group'] == group
-    ax.scatter(
-        df_scaled_trials_aggregated.loc[mask, 'umap_x'],
-        df_scaled_trials_aggregated.loc[mask, 'umap_y'],
-        df_scaled_trials_aggregated.loc[mask, 'umap_z'],
-        label=group,
-        color=color,
-        alpha=0.3
-    )
+# for group, color in custom_colors.items():
+#     mask = df_scaled_trials_aggregated['parameter_group'] == group
+#     ax.scatter(
+#         df_scaled_trials_aggregated.loc[mask, 'umap_x'],
+#         df_scaled_trials_aggregated.loc[mask, 'umap_y'],
+#         df_scaled_trials_aggregated.loc[mask, 'umap_z'],
+#         label=group,
+#         color=color,
+#         alpha=0.3
+#     )
 
-ax.set_title('3D UMAP Projection of Generative Granular Acoustic Space', fontsize=14, fontweight='bold')
-ax.set_xlabel('UMAP Axis 1')
-ax.set_ylabel('UMAP Axis 2')
-ax.set_zlabel('UMAP Axis 3')
-ax.legend(title='Parameter Subgroup')
+# ax.set_title('3D UMAP Projection of Generative Granular Acoustic Space', fontsize=14, fontweight='bold')
+# ax.set_xlabel('UMAP Axis 1')
+# ax.set_ylabel('UMAP Axis 2')
+# ax.set_zlabel('UMAP Axis 3')
+# ax.legend(title='Parameter Subgroup')
 
-plt.savefig(PLOT_3D_FILE_path_PNG, format='png', dpi=300, bbox_inches='tight')
+# plt.savefig(PLOT_3D_FILE_path_PNG, format='png', dpi=300, bbox_inches='tight')
 
 ###_____________________________________________________________________________###
 ###_____________________________________________________________________________###
 ### Trying HEXBINS instead + scatterplots
 
 
-HEXBIN_FILE_NAME = os.path.normpath(FIGURES_DIR + "\\PCA_hexbin.png") 
-SCATTER_PLOT_FILE_PATH = os.path.normpath(FIGURES_DIR + "\\PCA_scatter_plot.png") 
+# HEXBIN_FILE_NAME = os.path.normpath(FIGURES_DIR + "\\PCA_hexbin.png") 
+# SCATTER_PLOT_FILE_PATH = os.path.normpath(FIGURES_DIR + "\\PCA_scatter_plot.png") 
 
-pca_obj = PCA(n_components=2)
-reduced_data = pca_obj.fit_transform(arr_scaled_trials_aggregated)
-print(arr_scaled_trials_aggregated.shape, reduced_data.shape)
-x = reduced_data.T[0]
-y = reduced_data.T[1]
+# pca_obj = PCA(n_components=2)
+# reduced_data = pca_obj.fit_transform(arr_scaled_trials_aggregated)
+# print(arr_scaled_trials_aggregated.shape, reduced_data.shape)
+# x = reduced_data.T[0]
+# y = reduced_data.T[1]
 
-c = ['tab:blue', 'tab:orange', 'tab:green']
-data = [[x[:200],y[:200]], [x[200:400],y[200:400]],[x[400:600],y[400:600]],[x[600:],y[600:]]]
-get_scatter_plt(file_path=SCATTER_PLOT_FILE_PATH,
-             data=data, xlabel="PCA component 1", ylabel="PCA component 2", 
-             title="Output 9D metrics PCA components (2) scatter plot", 
-             colors=c, labels= labels)
+# c = ['tab:blue', 'tab:orange', 'tab:green']
+# data = [[x[:200],y[:200]], [x[200:400],y[200:400]],[x[400:600],y[400:600]],[x[600:],y[600:]]]
+# get_scatter_plt(file_path=SCATTER_PLOT_FILE_PATH,
+#              data=data, xlabel="PCA component 1", ylabel="PCA component 2", 
+#              title="Output 9D metrics PCA components (2) scatter plot", 
+#              colors=c, labels= labels)
 
 
 # xlim = x.min(), x.max()
