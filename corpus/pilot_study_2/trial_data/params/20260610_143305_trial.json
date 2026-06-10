@@ -1,0 +1,99 @@
+{
+    "general_trial_parametres": {
+        "features": null,
+        "n_configurations": 1000,
+        "k_repetitions": 5,
+        "master_seed": 42,
+        "sr": 48000,
+        "grain_size": 4800
+    },
+    "config_parametre_ranges": {
+        "n_streams_arr": [
+            1,
+            2,
+            4,
+            16
+        ],
+        "windows": [
+            "hanning",
+            "expodec",
+            "rexpodec",
+            "sinc_envelope"
+        ],
+        "density_arrays": [
+            [
+                1,
+                1,
+                1
+            ],
+            [
+                1,
+                3,
+                9
+            ],
+            [
+                10,
+                10,
+                10
+            ],
+            [
+                10,
+                30,
+                90
+            ],
+            [
+                100,
+                100,
+                100
+            ],
+            [
+                100,
+                300,
+                900
+            ],
+            [
+                1,
+                90,
+                900
+            ],
+            [
+                30,
+                90,
+                100
+            ]
+        ],
+        "grain_size_arrays": [
+            [
+                48,
+                48,
+                48
+            ],
+            [
+                1920,
+                1920,
+                1920
+            ],
+            [
+                4800,
+                4800,
+                4800
+            ],
+            [
+                48,
+                1920,
+                4800
+            ],
+            [
+                4800,
+                48,
+                4800
+            ]
+        ],
+        "n_clusters_arr": [
+            2,
+            3,
+            5,
+            8
+        ]
+    }
+}

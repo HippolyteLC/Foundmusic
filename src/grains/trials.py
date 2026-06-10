@@ -61,7 +61,6 @@ for i in range(N_CONFIGURATIONS):
             'grain_position_sampling_seed': grain_position_sampling_seeds[j]
         })
 
-### Do the analysis of grains in a NB to visualize and choose descriptors
 
 time = datetime.now().strftime("%Y%m%d_%H%M%S")
 trial_dir = os.path.normpath(PATH + f"\\trial_data\\")
@@ -86,6 +85,9 @@ trial_params_path = os.path.normpath(trial_params_dir + f"\\{time}_trial.json")
 
 analyzer = AnalyzerObject(PATH, SR)
 analyzer.load_y()
+y = analyzer.y
+if len(y) > SR*10:
+    y = y[:SR*10]
 grain_size = int(SR*GRAIN_DURATION)
 
 if os.path.exists(METADATA_PATH):
@@ -213,7 +215,7 @@ for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS):
         tpm = rand_tpm(n_states, conf_seed)        
 
     audio_arr, markchains, params = granulator.run_v3(
-        y=analyzer.y,
+        y=y,
         densities=densities,
         grain_size=grain_size,
         grains=grains,
@@ -305,7 +307,7 @@ for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS, N_
     tpm = rand_tpm(n_states, conf_seed)
   
     audio_arr, markchains, params = granulator.run_v3(
-        y=analyzer.y,
+        y=y,
         densities=densities,
         grain_size=grain_size,
         grains=grains,
