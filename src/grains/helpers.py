@@ -37,6 +37,8 @@ def sinc_envelope(size, lobes=3):
     Sinc envelope with n number of lobes on each side. 
     Taken from Roads Microsounds
     """
+    if size <= 0:
+        return np.ones(1)
     t = np.linspace(-lobes, lobes, size)
     
     window = np.sinc(t)
@@ -46,6 +48,10 @@ def normalize_output(data):
     """
     Use max normalization for outputs to avoid clipping.
     """
+    if not np.isfinite(data).all():
+        print("Warning: Input contained NaN/Inf value. Replacing with 0.")
+        data = np.nan_to_num(data, nan=0.0, posinf=0.0, neginf=0.0)
+
     data_float = data.astype(np.float32)
     peak = np.max(np.abs(data_float))
     if peak == 0:

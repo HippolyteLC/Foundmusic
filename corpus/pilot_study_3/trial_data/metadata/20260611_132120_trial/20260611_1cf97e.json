@@ -1,0 +1,65 @@
+{
+    "trial_id": "config_850_rep_0",
+    "synthesis_params": {
+        "densities": [
+            10,
+            30,
+            90
+        ],
+        "grain_size": 4800,
+        "grain_sizes": [
+            4800,
+            48,
+            4800
+        ],
+        "config_seed": 69811,
+        "seed_grain_sampling": 77394,
+        "seed_state_sampling": 8925,
+        "seed_grain_pos_sampling": 65456,
+        "n_streams": 1,
+        "window": "hanning",
+        "n_clusters": 3,
+        "n_iterations": 20,
+        "delta_t_samples": 48000,
+        "init_states": [
+            13
+        ],
+        "n_states": 27
+    },
+    "metrics": {
+        "centroid_mean": 0.0,
+        "centroid_std": 0.0,
+        "centroid_skewness": NaN,
+        "flatness_mean": 0.0,
+        "flatness_std": 0.0,
+        "flatness_skewness": NaN,
+        "flux_mean": 0.0,
+        "flux_std": 0.0,
+        "flux_skewness": NaN
+    },
+    "markov_chains": [
+        [
+            13,
+            23,
+            17,
+            21,
+            3,
+            5,
+            18,
+            25,
+            0,
+            14,
+            5,
+            15,
+            22,
+            12,
+            2,
+            6,
+            12,
+            7,
+            16,
+            15,
+            5
+        ]
+    ]
+}

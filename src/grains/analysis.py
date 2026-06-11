@@ -249,30 +249,6 @@ class AnalyzerObject():
         grains = [i*grain_size for i in range(n_grains)]
         return grains
 
-### OBSOLETE FUNCTIONS
-
-
-
-    # def display_scatter_plot(self, arr_1, arr_2):
-    #     plt.figure(figsize=(10, 7))
-    #     plt.scatter(arr_1, arr_2, alpha=0.7)
-    #     plt.ylabel("Spectral Flatness")
-    #     plt.xlabel("Spectral Root Mean Square")
-    #     plt.grid(True, linestyle='--', alpha=0.6)
-    #     plt.show()
-    
-    # def save_scatter_plot(self, arr_1, arr_2):
-    #     y_label = "Spectral Flatness"
-    #     x_label = "Spectral Root Mean Square"
-    #     plt.figure(figsize=(10, 7))
-    #     plt.scatter(arr_1, arr_2, alpha=0.7)
-    #     plt.ylabel(y_label)
-    #     plt.xlabel(x_label)
-    #     plt.grid(True, linestyle='--', alpha=0.6)
-    #     save_title = f""
-    #     plt.savefig()
-
-
 def show_scatter_plt(x, y, x_label, y_label, title, alpha=0.7):
     """ 
     Show scatter plot for two arrays. Add title, x and y labels. 
@@ -290,16 +266,11 @@ def get_scatter_plt(file_path, data, xlabel, ylabel, title, colors, labels, alph
     Show scatter plot for two arrays. Add title, x and y labels. 
     """
     fig, ax = plt.subplots()
-    data =  np.array(data)
-    if len(data) >= 3:
-        for idx in range(len(data)):
-            x,y  = data[idx]
-            c = colors[idx]
-            ax.scatter(x,y,c=c, label=labels[idx], alpha=alpha,
-                       edgecolors=None)
-    else:
-        x, y = data
-        ax.scatter(x, y, alpha=alpha)
+  
+    for idx, (x_group, y_group) in enumerate(data):
+            ax.scatter(x_group, y_group, c=colors[idx], label=labels[idx], 
+                    alpha=alpha)
+  
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
     ax.set_title(title)
