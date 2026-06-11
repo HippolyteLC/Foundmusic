@@ -155,6 +155,26 @@ general_config = {
 with open(trial_params_path, "w") as f:
     json.dump(general_config, f, indent=4)
 
+### Refactor into funcs
+
+def get_metrics(audio_arr):
+    spec_arr, spectral_obj = output_analyzer.get_spectral_arr(y=audio_arr)
+    flatness_arr = spectral_obj.flatness(spec_arr)
+    flux_arr = spectral_obj.flux(spec_arr)
+    centroid_arr = spectral_obj.centroid(spec_arr)
+    metrics = {
+        "centroid_mean": np.mean(centroid_arr),
+        "centroid_std": np.std(centroid_arr),
+        "centroid_skewness": float(np.nan_to_num(stats.skew(centroid_arr), nan=0.0)),
+        "flatness_mean": np.mean(flatness_arr),
+        "flatness_std": np.std(flatness_arr),
+        "flatness_skewness": float(np.nan_to_num(stats.skew(flatness_arr), nan=0.0)),
+        "flux_mean": np.mean(flux_arr),
+        "flux_std": np.std(flux_arr),
+        "flux_skewness": float(np.nan_to_num(stats.skew(flux_arr), nan=0.0))
+    }
+    return metrics
+
 ### Do the trial runs
 
 ##### Trial 1,2, and 3 (Sub group studies)
@@ -234,23 +254,8 @@ for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS):
     parametres = {}
     parametres["trial_id"] = trial_id
     parametres["synthesis_params"] = params
-    # print([(k, type(v)) for k,v in params.items()])
 
-    spec_arr, spectral_obj = output_analyzer.get_spectral_arr(y=audio_arr)
-    flatness_arr = spectral_obj.flatness(spec_arr)
-    flux_arr = spectral_obj.flux(spec_arr)
-    centroid_arr = spectral_obj.centroid(spec_arr)
-    metrics = {
-        "centroid_mean": np.mean(centroid_arr),
-        "centroid_std": np.std(centroid_arr),
-        "centroid_skewness": stats.skew(centroid_arr),
-        "flatness_mean": np.mean(flatness_arr),
-        "flatness_std": np.std(flatness_arr),
-        "flatness_skewness": stats.skew(flatness_arr),
-        "flux_mean": np.mean(flux_arr),
-        "flux_std": np.std(flux_arr),
-        "flux_skewness": stats.skew(flux_arr)
-    }
+    metrics = get_metrics(audio_arr)
 
     parametres["metrics"] = {k: float(v) for k,v in metrics.items()}
     parametres["markov_chains"] = [[int(i) for i in j] for j in markchains]
@@ -327,22 +332,8 @@ for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS, N_
     parametres["trial_id"] = trial_id
     parametres["synthesis_params"] = params
     
-    spec_arr, spectral_obj = output_analyzer.get_spectral_arr(y=audio_arr)
-    flatness_arr = spectral_obj.flatness(spec_arr)
-    flux_arr = spectral_obj.flux(spec_arr)
-    centroid_arr = spectral_obj.centroid(spec_arr)
-    metrics = {
-        "centroid_mean": np.mean(centroid_arr),
-        "centroid_std": np.std(centroid_arr),
-        "centroid_skewness": stats.skew(centroid_arr),
-        "flatness_mean": np.mean(flatness_arr),
-        "flatness_std": np.std(flatness_arr),
-        "flatness_skewness": stats.skew(flatness_arr),
-        "flux_mean": np.mean(flux_arr),
-        "flux_std": np.std(flux_arr),
-        "flux_skewness": stats.skew(flux_arr)
-    }
-
+    metrics = get_metrics(audio_arr)
+    
     parametres["metrics"] = {k: float(v) for k,v in metrics.items()}
     parametres["markov_chains"] = [[int(i) for i in j] for j in markchains]
     
