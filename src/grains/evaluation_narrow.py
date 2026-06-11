@@ -19,8 +19,8 @@ import audioflux as af
 ### IMPORTANT: every unqiue config's K repetitions are aggregated and the mean is taken
 # This is done to keep the iid property for statistical testing of variety of outputs
 
-STUDY_NAME = "pilot_study_2"
-TRIAL_NAME = "20260610_143305_trial"
+STUDY_NAME = "pilot_study_3"
+TRIAL_NAME = "20260611_182323_trial"
 GLOBAL_INIT_PARAMS_PATH = f"..\..\corpus\{STUDY_NAME}\\trial_data\params\\{TRIAL_NAME}.json"
 with open(GLOBAL_INIT_PARAMS_PATH, "r") as f:
     global_init_params_data = json.load(f)
@@ -268,6 +268,7 @@ plt.ylabel('Pairwise Cosine Distance', fontsize=12)
 plt.title('Acoustic Diversity Profile across Parameter Subgroups', fontsize=14, fontweight='bold')
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 plt.savefig(os.path.normpath(FIGURES_DIR + BOX_PLOT_FILE_NAME), dpi=300)
+plt.close()
 
 ###_____________________________________________________________________________###
 ###_____________________________________________________________________________###
@@ -277,7 +278,6 @@ print("starting umap process")
 
 PLOT_FILE_PATH_PNG = os.path.normpath(FIGURES_DIR + "umap_acoustic_metrics_space.png") 
 PLOT_FILE_PATH_PDF = os.path.normpath(FIGURES_DIR + "umap_acoustic_metrics_space.pdf") 
-PLOT_3D_FILE_path_PNG = os.path.normpath(FIGURES_DIR + "umap_3D_acoustic_metrics_space.png") 
 
 reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=42)
 embedding = reducer.fit_transform(arr_scaled_trials_aggregated[:600])
@@ -288,85 +288,65 @@ len_general = 200
 len_random  = 400
 
 group_labels = np.repeat(
-    ['Markov Group', 'State-Dependent Group', 'Granular Synthesis Group'], #, 'Baseline Group'],
-    [len_markov, len_state, len_general]#, len_random]
+    ['Markov Group', 'State-Dependent Group', 'Granular Synthesis Group', 'Baseline Group'],
+    [len_markov, len_state, len_general, len_random]
 )
 
-df_scaled_trials_aggregated['parameter_group'] = group_labels
-
-df_scaled_trials_aggregated['umap_x'] = embedding[:, 0]
-df_scaled_trials_aggregated['umap_y'] = embedding[:, 1]
+umap_df = pd.DataFrame({
+    "umap_x": embedding[:, 0],
+    "umap_y": embedding[:, 1], 
+})
 
 custom_colors = {
-    'Markov Group': "#6f24b1",             
-    'State-Dependent Group': "#daca12",    
+    'Markov Group': "#1f81d0",             
+    'State-Dependent Group': "#d89e20",    
     'Granular Synthesis Group': "#24de13", 
-    'Baseline Group': "#7f7f7f"            
+    'Baseline Group': "#e8e81b"            
 }
 
 plt.figure(figsize=(10, 8))
 sns.scatterplot(
     x='umap_x', y='umap_y', 
-    hue='parameter_group', 
-    alpha=0.3, 
+    alpha=0.5, 
     palette=custom_colors, 
-    data=df_scaled_trials_aggregated
+    data=umap_df
 )
 
-plt.title('UMAP Projection of Generative Granular Acoustic Space', fontsize=14, fontweight='bold')
+plt.title('UMAP Projection of Output Acoustic Space', fontsize=14, fontweight='bold')
 plt.xlabel('UMAP Axis 1')
 plt.ylabel('UMAP Axis 2')
 plt.legend(title='Parameter Subgroup')
-plt.grid(True, alpha=0.3)
+plt.grid(True, alpha=0.5)
 
 plt.savefig(PLOT_FILE_PATH_PDF, format='pdf', bbox_inches='tight')
 plt.savefig(PLOT_FILE_PATH_PNG, format='png', dpi=300, bbox_inches='tight')
-
-reducer = umap.UMAP(n_components=3, n_neighbors=15, min_dist=0.1, random_state=42)
-embedding = reducer.fit_transform(arr_scaled_trials_aggregated)
-
-df_scaled_trials_aggregated['umap_x'] = embedding[:, 0]
-df_scaled_trials_aggregated['umap_y'] = embedding[:, 1]
-df_scaled_trials_aggregated['umap_z'] = embedding[:, 2]
-
-fig = plt.figure(figsize=(10, 8))
-ax = fig.add_subplot(111, projection='3d')
-
-for group, color in custom_colors.items():
-    mask = df_scaled_trials_aggregated['parameter_group'] == group
-    ax.scatter(
-        df_scaled_trials_aggregated.loc[mask, 'umap_x'],
-        df_scaled_trials_aggregated.loc[mask, 'umap_y'],
-        df_scaled_trials_aggregated.loc[mask, 'umap_z'],
-        label=group,
-        color=color,
-        alpha=0.3
-    )
-
-ax.set_title('3D UMAP Projection of Generative Granular Acoustic Space', fontsize=14, fontweight='bold')
-ax.set_xlabel('UMAP Axis 1')
-ax.set_ylabel('UMAP Axis 2')
-ax.set_zlabel('UMAP Axis 3')
-ax.legend(title='Parameter Subgroup')
-
-plt.savefig(PLOT_3D_FILE_path_PNG, format='png', dpi=300, bbox_inches='tight')
+plt.close()
 
 ###_____________________________________________________________________________###
 ###_____________________________________________________________________________###
-### PCA Scatterplot
+### PCA Scatterplot [OBSOLETE]
 
-SCATTER_PLOT_FILE_PATH = os.path.normpath(FIGURES_DIR + "\\PCA_scatter_plot.png") 
+# SCATTER_PLOT_FILE_PATH = os.path.normpath(FIGURES_DIR + "\\PCA_scatter_plot.png") 
 
-pca_obj = PCA(n_components=2)
-reduced_data = pca_obj.fit_transform(arr_scaled_trials_aggregated)
-# print(arr_scaled_trials_aggregated.shape, reduced_data.shape)
-x = reduced_data.T[0]
-y = reduced_data.T[1]
+# pca_obj = PCA(n_components=2)
+# reduced_data = pca_obj.fit_transform(arr_scaled_trials_aggregated)
+# # print(arr_scaled_trials_aggregated.shape, reduced_data.shape)
+# x = reduced_data.T[0]
+# y = reduced_data.T[1]
+# print(x.shape, y.shape)
+# c = ['tab:blue', 'tab:orange', 'tab:green', 'tab:cyan']
+# data = [(x[:200],y[:200]), (x[200:400],y[200:400]),(x[400:600],y[400:600]),(x[600:],y[600:])]
+# # get_scatter_plt(file_path=SCATTER_PLOT_FILE_PATH,
+# #              data=data, xlabel="PCA component 1", ylabel="PCA component 2", 
+# #              title="Output 9D metrics PCA components (2) scatter plot", 
+# #              colors=c, labels= labels)
+# plt.figure(figsize=(10, 8))
+# for i in range(len(data)):
+#     plt.scatter(data[i][0], data[i][1], c=c[i], label=labels[i], alpha=0.7)
 
-c = ['tab:blue', 'tab:orange', 'tab:green', 'tab:yellow']
-data = [[x[:200],y[:200]], [x[200:400],y[200:400]],[x[400:600],y[400:600]],[x[600:],y[600:]]]
-get_scatter_plt(file_path=SCATTER_PLOT_FILE_PATH,
-             data=data, xlabel="PCA component 1", ylabel="PCA component 2", 
-             title="Output 9D metrics PCA components (2) scatter plot", 
-             colors=c, labels= labels)
-
+# plt.xlabel("PCA component 1")
+# plt.ylabel("PCA component 2")
+# plt.title("Output 9D metrics PCA components (2) scatter plot")
+# plt.grid(True, linestyle='--', alpha=0.3)
+# plt.legend()
+# plt.savefig(SCATTER_PLOT_FILE_PATH, format='png', dpi=300, bbox_inches='tight')

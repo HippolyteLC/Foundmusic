@@ -269,7 +269,7 @@ def get_scatter_plt(file_path, data, xlabel, ylabel, title, colors, labels, alph
   
     for idx, (x_group, y_group) in enumerate(data):
             ax.scatter(x_group, y_group, c=colors[idx], label=labels[idx], 
-                    alpha=alpha)
+                    alpha=alpha, edgecolors="none")
   
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
@@ -277,7 +277,7 @@ def get_scatter_plt(file_path, data, xlabel, ylabel, title, colors, labels, alph
     ax.grid(True, linestyle='--', alpha=alpha)
     ax.legend()
     if file_path:
-        plt.savefig(file_path, format='png', dpi=300,bbox_inches='tight')
+        plt.savefig(file_path, format='png', dpi=300, bbox_inches='tight')
 
     
 def get_spectrogram(file_path, data, sr, y_axis="log", x_axis="time", title=None):
@@ -288,15 +288,16 @@ def get_spectrogram(file_path, data, sr, y_axis="log", x_axis="time", title=None
     D = librosa.amplitude_to_db(np.abs(librosa.stft(data)), ref=np.max)
     fig, ax = plt.subplots()
     img = librosa.display.specshow(data=D,y_axis=y_axis, x_axis=x_axis, sr=sr, ax=ax)
-    amplitude_type = "log-frequency"
+    amplitude_type = "Log-Frequency"
     if y_axis == "linear":
-        amplitude_type = "linear-frequency"
-    ax.set(title=f'{amplitude_type} spectrogram')
+        amplitude_type = "Linear Frequency"
+    ax.set(title=f'{amplitude_type} Spectrogram')
     ax.label_outer()
     fig.colorbar(img, ax=ax, format="%+2.f dB")
     plt.tight_layout()
 
     plt.savefig(file_path, format='png')#, dpi=300,bbox_inches='tight')
+    plt.close()
 
 def get_histograms(dir, file_name, df, features, n_cols=3, color='steelblue', n_bins=30):
     """

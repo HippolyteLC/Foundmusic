@@ -1,6 +1,7 @@
 import numpy as np
+import pandas as pd
 from algorithms import MarkovGranulizer, rand_tpm
-from analysis import AnalyzerObject
+from analysis import AnalyzerObject, get_spectrogram
 from helpers import expodec, rexpodec, sinc_envelope
 import writing
 import json 
@@ -8,6 +9,9 @@ import os
 from datetime import datetime
 from scipy import stats
 import warnings
+import umap
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 warnings.filterwarnings('ignore', message='KMeans is known to have a memory leak on Windows with MKL')
 
@@ -66,6 +70,7 @@ time = datetime.now().strftime("%Y%m%d_%H%M%S")
 trial_dir = os.path.normpath(PATH + f"\\trial_data\\")
 trial_logs_dir = os.path.normpath(trial_dir + "\\logs")
 trial_params_dir = os.path.normpath(trial_dir + "\\params")
+trial_figures_dir = os.path.normpath(trial_dir + "\\figures")
 trial_outputs_dir = os.path.normpath(trial_dir + "\\outputs" + f"\\{time}_trial")
 trial_metadata_dir = os.path.normpath(trial_dir + "\\metadata" + f"\\{time}_trial")
 
@@ -86,12 +91,13 @@ trial_params_path = os.path.normpath(trial_params_dir + f"\\{time}_trial.json")
 analyzer = AnalyzerObject(PATH, SR)
 analyzer.load_y()
 y = analyzer.y
-if len(y) > SR*10:
-    y = y[:SR*10]
+# if len(y) > SR*10:
+#     y = y[:SR*10]
 grain_size = int(SR*GRAIN_DURATION)
 
 if os.path.exists(METADATA_PATH):
     df = analyzer.load_metadata(METADATA_PATH)
+    df = df.iloc[:, 4:]
 else:
     df = analyzer.compute_grain_descriptors(grain_size)
     analyzer.save_metadata(df, grain_duration=GRAIN_DURATION)
@@ -100,6 +106,32 @@ _, df_scaled = analyzer.scale_metadata(df, scaler=2)
 grains = analyzer.grains(grain_size)
 granulator = MarkovGranulizer(sr=SR)
 output_analyzer = AnalyzerObject(PATH, SR)
+
+### Get input spectrogram + grain distribution (UMAP)
+input_spectrogram_path = os.path.normpath(trial_figures_dir + "\\input_spectrogram.png")
+print("PATH:", input_spectrogram_path)
+if not os.path.exists(input_spectrogram_path):
+    get_spectrogram(input_spectrogram_path, y,SR)
+
+input_grain_analysis_plot = os.path.normpath(trial_figures_dir + "\\input_grain_analysis.png")
+if not os.path.exists(input_grain_analysis_plot):
+    reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=MASTER_SEED)
+    embedding = reducer.fit_transform(df_scaled)
+    umap_df = pd.DataFrame(embedding, columns=['umap_x', 'umap_y'])
+    plt.figure(figsize=(10, 8))
+    sns.scatterplot(
+        x='umap_x', y='umap_y', 
+        alpha=0.5, 
+        data=umap_df
+    )
+
+    plt.title('UMAP Projection of Grains Descriptor Space', fontsize=14, fontweight='bold')
+    plt.xlabel('UMAP Axis 1')
+    plt.ylabel('UMAP Axis 2')
+    plt.grid(True, alpha=0.5)
+
+    plt.savefig(input_grain_analysis_plot, format='png', dpi=300, bbox_inches='tight')
+    plt.close() 
 
 ### Set the parametre value ranges
 
@@ -299,6 +331,8 @@ for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS, N_
     if not last_n_clusters == n_clusters:
         kmeans_obj = analyzer.compute_kmeans(df_scaled, n_clusters=n_clusters, features=features)
         dict_clusters = analyzer.get_cluster_dict(kmeans_obj.labels_)
+        if len(dict_clusters) < n_clusters:
+            print(f"KMeans produced empty clusters. Set n_clusters={n_clusters}, got {len(dict_clusters)} clusters.")
         n_states = len(grain_sizes) * len(densities) * n_clusters
 
     last_n_clusters = n_clusters
@@ -333,7 +367,7 @@ for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS, N_
     parametres["synthesis_params"] = params
     
     metrics = get_metrics(audio_arr)
-    
+
     parametres["metrics"] = {k: float(v) for k,v in metrics.items()}
     parametres["markov_chains"] = [[int(i) for i in j] for j in markchains]
     
