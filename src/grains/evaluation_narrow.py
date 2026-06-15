@@ -10,7 +10,7 @@ import matplotlib.colors as colors
 import seaborn as sns
 import os
 import umap
-from analysis import get_histograms, get_scatter_plt, get_spectrogram
+from analysis import get_histograms, get_scatter_plt, get_spectrogram, get_density_trellis
 from scikit_posthocs import posthoc_dunn
 import audioflux as af
 
@@ -45,7 +45,7 @@ with open(TRIALS_PARAMS_PATH, "r") as f:
 
 ### Analyzing the input 
 TRIAL_INPUT = f"..\..\corpus\{STUDY_NAME}\\input.wav"
-INPUT_SPECTROGRAM_PATH = os.path.normpath(FIGURES_DIR + "input_spectrogram.png")
+INPUT_SPECTROGRAM_PATH = os.path.normpath(FIGURES_DIR + "input_spectrogram.pdf")
 y,_ = af.read(TRIAL_INPUT, samplate=SR)
 get_spectrogram(INPUT_SPECTROGRAM_PATH,y,SR)
 
@@ -171,13 +171,21 @@ all_rand_flattened_matrix = flatten_upper_half(compute_cosine_matrix(arr_scaled_
 ###_____________________________________________________________________________###
 ### analyze data
 # TODO: produce histograms to display the 9 output metrics per parametre subgroup. 
-
+labels = ['Markov \nGroup', 'State-Dependent \nGroup', 'Granular Synthesis \nGroup', 'Baseline Group \n(Fully Randomized)']
 metrics_labels = list(df_scaled_trials_aggregated.columns)
 
-get_histograms(FIGURES_DIR, "markov_outputs_histograms_.png",df_scaled_trials_aggregated[:200], metrics_labels)
-get_histograms(FIGURES_DIR, "state_outputs_histograms_.png", df_scaled_trials_aggregated[200:400], metrics_labels)
-get_histograms(FIGURES_DIR, "gs_outputs_histograms_.png", df_scaled_trials_aggregated[400:600], metrics_labels)
-get_histograms(FIGURES_DIR, "all_random_outputs_histograms_.png", df_scaled_trials_aggregated[:600], metrics_labels)
+# get_histograms(FIGURES_DIR, "markov_outputs_histograms_.png",df_scaled_trials_aggregated[:200], metrics_labels)
+# get_histograms(FIGURES_DIR, "state_outputs_histograms_.png", df_scaled_trials_aggregated[200:400], metrics_labels)
+# get_histograms(FIGURES_DIR, "gs_outputs_histograms_.png", df_scaled_trials_aggregated[400:600], metrics_labels)
+# get_histograms(FIGURES_DIR, "all_random_outputs_histograms_.png", df_scaled_trials_aggregated[:600], metrics_labels)
+all_scaled_metrics_dfs = [
+    df_scaled_trials_aggregated[:200], 
+    df_scaled_trials_aggregated[200:400], 
+    df_scaled_trials_aggregated[400:600]
+]
+
+get_density_trellis(FIGURES_DIR, "KDE_plots_output_distributions.pdf", all_scaled_metrics_dfs,
+                    labels[:3],metrics_labels)
 
 ###_____________________________________________________________________________###
 ###_____________________________________________________________________________###
@@ -200,11 +208,11 @@ def compute_posthoc_dunns(dfs, metric):
     return p_vals
 
 pairwise_groups = ['markov_state', 'markov_gs', 'state_gs']
-all_scaled_metrics_dfs = [
-    df_scaled_trials_aggregated[:200], 
-    df_scaled_trials_aggregated[200:400], 
-    df_scaled_trials_aggregated[400:600]
-]
+# all_scaled_metrics_dfs = [
+#     df_scaled_trials_aggregated[:200], 
+#     df_scaled_trials_aggregated[200:400], 
+#     df_scaled_trials_aggregated[400:600]
+# ]
 
 krusal_wallis_per_metric = {}
 posthoc_dunns_per_metric = {}
@@ -215,9 +223,7 @@ for col in metrics_labels:
     p_val_flat = flatten_upper_half(p_val_matrix.to_numpy()) # output is indices [(0,1), (0,2), (1,2)]
     posthoc_dunns_per_metric[col] = {
         group: float(p_val_flat[i]) for i, group in enumerate(pairwise_groups)
-    }
-
-   
+    }   
 
 results_data = {
     "kruskal_wallis_results": krusal_wallis_per_metric,
@@ -247,9 +253,7 @@ data_to_plot = [
 ]
 
 
-BOX_PLOT_FILE_NAME = f"{len(data_to_plot)}_box_plot.png"
-labels = ['Markov \nGroup', 'State-Dependent \nGroup', 'Granular Synthesis \nGroup', 'Baseline Group \n(Fully Randomized)']
-
+BOX_PLOT_FILE_NAME = f"{len(data_to_plot)}_box_plot.pdf"
 
 statistics = {}
 for idx, data in enumerate(data_to_plot):
@@ -264,10 +268,11 @@ plt.figure(figsize=(8, 6))
 
 # Create the boxplot
 plt.boxplot(data_to_plot, labels=labels)
+
 plt.ylabel('Pairwise Cosine Distance', fontsize=12)
 plt.title('Acoustic Diversity Profile across Parameter Subgroups', fontsize=14, fontweight='bold')
 plt.grid(axis='y', linestyle='--', alpha=0.7)
-plt.savefig(os.path.normpath(FIGURES_DIR + BOX_PLOT_FILE_NAME), dpi=300)
+plt.savefig(os.path.normpath(FIGURES_DIR + BOX_PLOT_FILE_NAME), dpi=300, format='pdf')
 plt.close()
 
 ###_____________________________________________________________________________###
@@ -276,11 +281,10 @@ plt.close()
 
 print("starting umap process")
 
-PLOT_FILE_PATH_PNG = os.path.normpath(FIGURES_DIR + "umap_acoustic_metrics_space.png") 
 PLOT_FILE_PATH_PDF = os.path.normpath(FIGURES_DIR + "umap_acoustic_metrics_space.pdf") 
 
 reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=42)
-embedding = reducer.fit_transform(arr_scaled_trials_aggregated[:600])
+embedding = reducer.fit_transform(arr_scaled_trials_aggregated)
 
 len_markov  = 200
 len_state   = 200
@@ -295,6 +299,7 @@ group_labels = np.repeat(
 umap_df = pd.DataFrame({
     "umap_x": embedding[:, 0],
     "umap_y": embedding[:, 1], 
+    "group_labels": group_labels
 })
 
 custom_colors = {
@@ -308,6 +313,7 @@ plt.figure(figsize=(10, 8))
 sns.scatterplot(
     x='umap_x', y='umap_y', 
     alpha=0.5, 
+    hue="group_labels",
     palette=custom_colors, 
     data=umap_df
 )
@@ -319,7 +325,6 @@ plt.legend(title='Parameter Subgroup')
 plt.grid(True, alpha=0.5)
 
 plt.savefig(PLOT_FILE_PATH_PDF, format='pdf', bbox_inches='tight')
-plt.savefig(PLOT_FILE_PATH_PNG, format='png', dpi=300, bbox_inches='tight')
 plt.close()
 
 ###_____________________________________________________________________________###

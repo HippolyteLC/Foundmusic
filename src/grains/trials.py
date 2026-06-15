@@ -130,7 +130,7 @@ if not os.path.exists(input_grain_analysis_plot):
     plt.ylabel('UMAP Axis 2')
     plt.grid(True, alpha=0.5)
 
-    plt.savefig(input_grain_analysis_plot, format='png', dpi=300, bbox_inches='tight')
+    plt.savefig(input_grain_analysis_plot, format='pdf', dpi=300, bbox_inches='tight')
     plt.close() 
 
 ### Set the parametre value ranges
