@@ -3,7 +3,7 @@
 Bsc thesis repository for sound analysis and synthesis
 
 # 1. Thesis Poster
-![Project Poster](docs/images/poster_presentation_final_1/Slide1.PNG)
+<!-- ![Project Poster](docs/images/poster_presentation_final_1/Slide1.PNG) -->
 
 
 # 2. Usage
