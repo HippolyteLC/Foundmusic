@@ -13,11 +13,19 @@ import umap
 from analysis import get_histograms, get_scatter_plt, get_spectrogram, get_density_trellis
 from scikit_posthocs import posthoc_dunn
 import audioflux as af
+from sklearn.preprocessing import normalize
 
 ###_____________________________________________________________________________###
 ###_____________________________________________________________________________###
 ### IMPORTANT: every unqiue config's K repetitions are aggregated and the mean is taken
 # This is done to keep the iid property for statistical testing of variety of outputs
+
+# Some booleans to determine which plots/ statistics are produced.
+do_UMAP_scatterplot = False
+do_boxplot = False
+do_violin_plot_sns = False
+do_violin_plot_plt = True
+do_cosine_distance_comp = False if not (do_violin_plot_sns or do_violin_plot_plt) else True
 
 STUDY_NAME = "pilot_study_3"
 TRIAL_NAME = "20260611_182323_trial"
@@ -136,9 +144,11 @@ def trial_to_scaled_metric_df(list_trials, scaler=1):
 
 def compute_cosine_matrix(df):
     cosine_matrix = []
-    for i in range(df.shape[-1]):
+    data = np.array(df)
+    n_samples = data.shape[0]
+    for i in range(n_samples):
         row = []
-        for j in range(df.shape[-1]):
+        for j in range(n_samples):
             cosine_dist = cosine(df[i], df[j])
             row.append(cosine_dist)
         cosine_matrix.append(row)
@@ -162,21 +172,26 @@ def compute_stats(arr):
 df_trials_aggregated, df_scaled_trials_aggregated, arr_scaled_trials_aggregated = trial_to_scaled_metric_df(all_trials_aggregated)
 # print(arr_scaled_trials_aggregated.shape)
 
-markov_flattened_matrix = flatten_upper_half(compute_cosine_matrix(arr_scaled_trials_aggregated[:200]))
-state_flattened_matrix = flatten_upper_half(compute_cosine_matrix(arr_scaled_trials_aggregated[200:400]))
-gs_flattened_matrix = flatten_upper_half(compute_cosine_matrix(arr_scaled_trials_aggregated[400:600]))
-all_rand_flattened_matrix = flatten_upper_half(compute_cosine_matrix(arr_scaled_trials_aggregated[600:]))
 
+if do_cosine_distance_comp:
+    print(arr_scaled_trials_aggregated[:200].shape)
+    l2_normalized_data = normalize(arr_scaled_trials_aggregated)
+    print(l2_normalized_data.shape)
+    markov_flattened_matrix = flatten_upper_half(compute_cosine_matrix(l2_normalized_data[:200]))
+    state_flattened_matrix = flatten_upper_half(compute_cosine_matrix(l2_normalized_data[200:400]))
+    gs_flattened_matrix = flatten_upper_half(compute_cosine_matrix(l2_normalized_data[400:600]))
+    all_rand_flattened_matrix = flatten_upper_half(compute_cosine_matrix(l2_normalized_data[:600]))
+    print(markov_flattened_matrix.shape)
 ###_____________________________________________________________________________###
 ###_____________________________________________________________________________###
-### analyze data
+### KDE plots - analyze data
 # TODO: produce histograms to display the 9 output metrics per parametre subgroup. 
-labels = ['Markov \nGroup', 'State-Dependent \nGroup', 'Granular Synthesis \nGroup', 'Baseline Group \n(Fully Randomized)']
+labels = ['Markov \nGroup', 'State \nGroup', 'GS \nGroup', 'Baseline Group \n(Fully Randomized)']
 metrics_labels = list(df_scaled_trials_aggregated.columns)
 
-# get_histograms(FIGURES_DIR, "markov_outputs_histograms_.png",df_scaled_trials_aggregated[:200], metrics_labels)
-# get_histograms(FIGURES_DIR, "state_outputs_histograms_.png", df_scaled_trials_aggregated[200:400], metrics_labels)
-# get_histograms(FIGURES_DIR, "gs_outputs_histograms_.png", df_scaled_trials_aggregated[400:600], metrics_labels)
+get_histograms(FIGURES_DIR, "markov_outputs_histograms.pdf",df_scaled_trials_aggregated[:200], metrics_labels)
+get_histograms(FIGURES_DIR, "state_outputs_histograms.pdf", df_scaled_trials_aggregated[200:400], metrics_labels)
+get_histograms(FIGURES_DIR, "gs_outputs_histograms.pdf", df_scaled_trials_aggregated[400:600], metrics_labels)
 # get_histograms(FIGURES_DIR, "all_random_outputs_histograms_.png", df_scaled_trials_aggregated[:600], metrics_labels)
 all_scaled_metrics_dfs = [
     df_scaled_trials_aggregated[:200], 
@@ -245,113 +260,123 @@ with open(os.path.normpath(RESULTS_DIR + RESULTS_FILE_NAME), "w") as f:
 ###_____________________________________________________________________________###
 ### Creating + saving box_plots
 
-data_to_plot = [
-    markov_flattened_matrix,
-    state_flattened_matrix,
-    gs_flattened_matrix,
-    all_rand_flattened_matrix
-]
+if do_cosine_distance_comp:
+    data_to_plot = [
+        markov_flattened_matrix,
+        state_flattened_matrix,
+        gs_flattened_matrix,
+        all_rand_flattened_matrix
+    ]
 
 
-BOX_PLOT_FILE_NAME = f"{len(data_to_plot)}_box_plot.pdf"
+    statistics = {}
+    for idx, data in enumerate(data_to_plot):
+        statistics[labels[idx]] = {
+            "median": float(np.median(data)),
+            "iqr": float(stats.iqr(data))
+        }
+    statistics_df = pd.DataFrame(statistics)
+    statistics_df.to_csv(os.path.normpath(RESULTS_DIR + f'{TRIAL_NAME}_statistics_cosine_results.csv'))
 
-statistics = {}
-for idx, data in enumerate(data_to_plot):
-    statistics[labels[idx]] = {
-        "median": float(np.median(data)),
-        "iqr": float(stats.iqr(data))
+BOX_PLOT_FILE_NAME = f"box_plot.pdf"
+VIOLIN_PLOT_PLT_FILE_NAME = f"violin_plot_plt.pdf"
+VIOLIN_PLOT_SNS_FILE_NAME = f"violin_plot_sns.pdf"
+
+if do_boxplot == True:
+
+    plt.figure(figsize=(8, 6))
+
+    # Create the boxplot
+    plt.boxplot(data_to_plot, labels=labels)
+
+    plt.ylabel('Pairwise Cosine Distance', fontsize=12)
+    plt.title('Acoustic Diversity across Parameter Subgroups', fontsize=14, fontweight='bold')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.savefig(os.path.normpath(FIGURES_DIR + BOX_PLOT_FILE_NAME), dpi=300, format='pdf')
+    plt.close()
+
+    plt.figure(figsize=(8, 6))
+
+if do_violin_plot_plt:
+    # sns.violinplot(data=data_to_plot, color="black") TODO
+    plt.violinplot(data_to_plot, showmedians=True)
+    plt.xticks(ticks=np.arange(1, len(data_to_plot) + 1), labels=labels)
+
+    plt.ylabel('Pairwise Cosine Distance', fontsize=12)
+    plt.title('Acoustic Diversity across Parameter Subgroups', fontsize=14, fontweight='bold')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.savefig(os.path.normpath(FIGURES_DIR + VIOLIN_PLOT_PLT_FILE_NAME), dpi=300, format='pdf')
+    plt.close()
+
+
+if do_violin_plot_sns:
+    # sns violin + swarm plot 
+    plt.figure(figsize=(8, 6))
+
+    sns.violinplot(data=data_to_plot, inner="quart", color="salmon")
+    # sns.swarmplot(data=data_to_plot, color="maroon", size=3)
+
+    plt.xticks(ticks=np.arange(len(labels)), labels=labels)
+    plt.ylabel('Pairwise Cosine Distance', fontsize=12)
+    plt.title('Acoustic Diversity across Parameter Subgroups', fontsize=14, fontweight='bold')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+    plt.savefig(os.path.normpath(FIGURES_DIR + VIOLIN_PLOT_SNS_FILE_NAME), dpi=300, format='pdf')
+    plt.close()
+
+    print([data_to_plot[i].shape for i in range(len(data_to_plot)) ])
+
+###_____________________________________________________________________________###
+###_____________________________________________________________________________###
+### Creating + saving reduced diminension scatter plot of outputs.
+
+if do_UMAP_scatterplot == True:
+    print("starting umap process")
+
+    PLOT_FILE_PATH_PDF = os.path.normpath(FIGURES_DIR + "umap_acoustic_metrics_space.pdf") 
+
+    reducer = umap.UMAP(n_neighbors=10, min_dist=0.75, random_state=42)
+    # increased min dist as clusters are too tight
+    embedding = reducer.fit_transform(arr_scaled_trials_aggregated)
+
+    len_markov  = 200
+    len_state   = 200
+    len_general = 200
+    len_random  = 400
+
+    group_labels = np.repeat(
+        ['Markov Group', 'State Group', 'GS Group', 'Baseline Group'],
+        [len_markov, len_state, len_general, len_random]
+    )
+
+    umap_df = pd.DataFrame({
+        "umap_x": embedding[:, 0],
+        "umap_y": embedding[:, 1], 
+        "group_labels": group_labels
+    })
+
+    custom_colors = {
+        'Markov Group': "#1f81d0",             
+        'State Group': "#d89e20",    
+        'GS Group': "#24de13", 
+        'Baseline Group': "#89b0e6"            
     }
-statistics_df = pd.DataFrame(statistics)
-statistics_df.to_csv(os.path.normpath(RESULTS_DIR + f'{TRIAL_NAME}_statistics_cosine_results.csv'))
 
-plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(10, 8))
+    sns.scatterplot(
+        x='umap_x', y='umap_y', 
+        alpha=0.8, 
+        hue="group_labels",
+        palette=custom_colors, 
+        data=umap_df
+    )
 
-# Create the boxplot
-plt.boxplot(data_to_plot, labels=labels)
+    plt.title('UMAP Projection of Output Acoustic Space', fontsize=14, fontweight='bold')
+    plt.xlabel('UMAP Axis 1')
+    plt.ylabel('UMAP Axis 2')
+    plt.legend(title='Parameter Subgroup')
+    plt.grid(True, alpha=0.3)
 
-plt.ylabel('Pairwise Cosine Distance', fontsize=12)
-plt.title('Acoustic Diversity Profile across Parameter Subgroups', fontsize=14, fontweight='bold')
-plt.grid(axis='y', linestyle='--', alpha=0.7)
-plt.savefig(os.path.normpath(FIGURES_DIR + BOX_PLOT_FILE_NAME), dpi=300, format='pdf')
-plt.close()
+    plt.savefig(PLOT_FILE_PATH_PDF, format='pdf', bbox_inches='tight')
+    plt.close()
 
-###_____________________________________________________________________________###
-###_____________________________________________________________________________###
-### Creating + saving reduced diminensionality scatter plot of outputs.
-
-print("starting umap process")
-
-PLOT_FILE_PATH_PDF = os.path.normpath(FIGURES_DIR + "umap_acoustic_metrics_space.pdf") 
-
-reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=42)
-embedding = reducer.fit_transform(arr_scaled_trials_aggregated)
-
-len_markov  = 200
-len_state   = 200
-len_general = 200
-len_random  = 400
-
-group_labels = np.repeat(
-    ['Markov Group', 'State-Dependent Group', 'Granular Synthesis Group', 'Baseline Group'],
-    [len_markov, len_state, len_general, len_random]
-)
-
-umap_df = pd.DataFrame({
-    "umap_x": embedding[:, 0],
-    "umap_y": embedding[:, 1], 
-    "group_labels": group_labels
-})
-
-custom_colors = {
-    'Markov Group': "#1f81d0",             
-    'State-Dependent Group': "#d89e20",    
-    'Granular Synthesis Group': "#24de13", 
-    'Baseline Group': "#e8e81b"            
-}
-
-plt.figure(figsize=(10, 8))
-sns.scatterplot(
-    x='umap_x', y='umap_y', 
-    alpha=0.5, 
-    hue="group_labels",
-    palette=custom_colors, 
-    data=umap_df
-)
-
-plt.title('UMAP Projection of Output Acoustic Space', fontsize=14, fontweight='bold')
-plt.xlabel('UMAP Axis 1')
-plt.ylabel('UMAP Axis 2')
-plt.legend(title='Parameter Subgroup')
-plt.grid(True, alpha=0.5)
-
-plt.savefig(PLOT_FILE_PATH_PDF, format='pdf', bbox_inches='tight')
-plt.close()
-
-###_____________________________________________________________________________###
-###_____________________________________________________________________________###
-### PCA Scatterplot [OBSOLETE]
-
-# SCATTER_PLOT_FILE_PATH = os.path.normpath(FIGURES_DIR + "\\PCA_scatter_plot.png") 
-
-# pca_obj = PCA(n_components=2)
-# reduced_data = pca_obj.fit_transform(arr_scaled_trials_aggregated)
-# # print(arr_scaled_trials_aggregated.shape, reduced_data.shape)
-# x = reduced_data.T[0]
-# y = reduced_data.T[1]
-# print(x.shape, y.shape)
-# c = ['tab:blue', 'tab:orange', 'tab:green', 'tab:cyan']
-# data = [(x[:200],y[:200]), (x[200:400],y[200:400]),(x[400:600],y[400:600]),(x[600:],y[600:])]
-# # get_scatter_plt(file_path=SCATTER_PLOT_FILE_PATH,
-# #              data=data, xlabel="PCA component 1", ylabel="PCA component 2", 
-# #              title="Output 9D metrics PCA components (2) scatter plot", 
-# #              colors=c, labels= labels)
-# plt.figure(figsize=(10, 8))
-# for i in range(len(data)):
-#     plt.scatter(data[i][0], data[i][1], c=c[i], label=labels[i], alpha=0.7)
-
-# plt.xlabel("PCA component 1")
-# plt.ylabel("PCA component 2")
-# plt.title("Output 9D metrics PCA components (2) scatter plot")
-# plt.grid(True, linestyle='--', alpha=0.3)
-# plt.legend()
-# plt.savefig(SCATTER_PLOT_FILE_PATH, format='png', dpi=300, bbox_inches='tight')

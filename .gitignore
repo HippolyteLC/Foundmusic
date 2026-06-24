@@ -9,6 +9,7 @@
 /docs/*/*.pdf
 /docs/*.pptx
 /docs/pdfs
+/docs/images/*.pptx
 /docs/references
 /corpus/case_study_Airbus_A300B4-622R(F)
 /corpus/pilot_trial_1/
@@ -18,8 +19,8 @@
 /corpus/*/*/*/*.m4a
 /corpus/*/*/*.mp3
 /corpus/*/*/*/*.mp3
+/src/grains/test.py
 /*/*.wav
 /*/*/*.wav
 /*/*/*/*.wav
 /*/*/*/*/*.wav
-/src/grains/test.py

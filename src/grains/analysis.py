@@ -365,7 +365,7 @@ def get_histograms(dir, file_name, df, features, format="pdf", n_cols=3, color='
     plt.savefig(output_path, format=format, dpi=300, bbox_inches='tight')
     plt.close()
 
-def get_density_trellis(dir, file_name, df_list, labels, features, n_cols=3, format="pdf"):
+def get_density_trellis(dir, file_name, df_list, labels, features, n_cols=3, format="pdf", ylim=1e-4):
     combined_df = pd.concat([df.assign(Group=label) for df, label in zip(df_list, labels)])
     
     n_features = len(features)
@@ -373,9 +373,12 @@ def get_density_trellis(dir, file_name, df_list, labels, features, n_cols=3, for
     
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 4, n_rows * 3.5), sharex=True, sharey=False)
     axes_flat = axes.flatten() if n_features > 1 else np.array([axes])
+    # colors = sns.color_palette(n_colors=len(labels))
 
     for i, col in enumerate(features):
-        sns.kdeplot(
+        # col_max = combined_df[col].max()
+        # col_min = combined_df[col].min()
+        pl = sns.kdeplot(
             data=combined_df, 
             x=col, 
             hue="Group", 
@@ -383,11 +386,21 @@ def get_density_trellis(dir, file_name, df_list, labels, features, n_cols=3, for
             common_norm=False, 
             alpha=0.3, 
             ax=axes_flat[i],
-            legend=False
+            legend=False,
+            # log_scale=(False, True),
+            # cut=0,
+            # clip=(col_min, col_max)
         )
+        axes_flat[i].set_yscale('symlog', linthresh=1)
+
+        _, ymax = axes_flat[i].get_ylim()
+        new_top = ymax * 4
+        axes_flat[i].set_ylim(bottom=1e-2, top=new_top)
+        # pl.set(ylim=(1e-5,None))
+        # max_density = axes_flat[i].get_ylim()[1]
         axes_flat[i].set_title(f'{col.capitalize()} distribution', fontsize=11, fontweight='bold')
         # axes_flat[i].tick_params(axis='x', which='both', bottom=True, labelbottom=True)
-
+        axes_flat[i].set_xscale('symlog', linthresh=1.2)
         if i % n_cols == 0:
             axes_flat[i].set_ylabel('Density')
         else:
@@ -403,8 +416,8 @@ def get_density_trellis(dir, file_name, df_list, labels, features, n_cols=3, for
         
     handles = [plt.Rectangle((0,0),1,1, color=sns.color_palette()[j]) for j in range(len(labels))]
     fig.legend(handles, labels, loc='center right', title="Groups")
-    
     plt.tight_layout(rect=[0, 0, 0.85, 1])
+    output_path = os.path.join(dir, file_name)
     plt.savefig(os.path.join(dir, file_name), format=format, dpi=300, bbox_inches='tight')
     plt.close()
 
