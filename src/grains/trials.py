@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
-from algorithms import MarkovGranulizer, rand_tpm
-from analysis import AnalyzerObject, get_spectrogram
-from helpers import expodec, rexpodec, sinc_envelope
-import writing
+from grains.algorithms import MarkovGranulizer, rand_tpm
+from grains.analysis import AnalyzerObject, get_spectrogram
+from grains.helpers import expodec, rexpodec, sinc_envelope
+import grains.writing
 import json 
 import os
 from datetime import datetime
@@ -111,7 +111,7 @@ output_analyzer = AnalyzerObject(PATH, SR)
 input_spectrogram_path = os.path.normpath(trial_figures_dir + "\\input_spectrogram.pdf")
 print("PATH:", input_spectrogram_path)
 if not os.path.exists(input_spectrogram_path):
-    get_spectrogram(input_spectrogram_path, y,SR)
+    get_spectrogram(input_spectrogram_path, y, SR)
 
 input_grain_analysis_plot = os.path.normpath(trial_figures_dir + "\\input_grain_analysis.pdf")
 if not os.path.exists(input_grain_analysis_plot):

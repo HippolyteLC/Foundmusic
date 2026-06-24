@@ -10,7 +10,7 @@ import matplotlib.colors as colors
 import seaborn as sns
 import os
 import umap
-from analysis import get_histograms, get_scatter_plt, get_spectrogram, get_density_trellis
+from grains.analysis import get_histograms, get_scatter_plt, get_spectrogram, get_density_trellis
 from scikit_posthocs import posthoc_dunn
 import audioflux as af
 from sklearn.preprocessing import normalize
@@ -28,6 +28,9 @@ do_violin_plot_plt = True
 do_cosine_distance_comp = False if not (do_violin_plot_sns or do_violin_plot_plt) else True
 
 STUDY_NAME = "pilot_study_3"
+# if not os.path.exists(f"..\\..\\corpus\\{STUDY_NAME}\\"):
+#     os.makedirs(f"..\\..\\corpus\\{STUDY_NAME}\\")
+
 TRIAL_NAME = "20260611_182323_trial"
 GLOBAL_INIT_PARAMS_PATH = f"..\..\corpus\{STUDY_NAME}\\trial_data\params\\{TRIAL_NAME}.json"
 with open(GLOBAL_INIT_PARAMS_PATH, "r") as f:

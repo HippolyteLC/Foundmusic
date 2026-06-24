@@ -10,7 +10,7 @@ import matplotlib.colors as colors
 import seaborn as sns
 import os
 import umap
-from analysis import get_histograms, get_scatter_plt, get_spectrogram
+from grains.analysis import get_histograms, get_scatter_plt, get_spectrogram
 from scikit_posthocs import posthoc_dunn
 import audioflux as af
 

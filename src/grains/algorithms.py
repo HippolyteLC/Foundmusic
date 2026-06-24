@@ -1,6 +1,6 @@
 import numpy as np
 import soundfile as sf
-from helpers import normalize_output
+from grains.helpers import normalize_output
 
 class Granulizer():
     def __init__(self, sr):

@@ -5,7 +5,7 @@ from audioflux.type import SpectralDataType, SpectralFilterBankScaleType
 import matplotlib.pyplot as plt
 import sklearn
 import librosa
-from writing import get_parametre_hashing
+from grains.writing import get_parametre_hashing
 import json 
 import csv
 import pandas as pd
