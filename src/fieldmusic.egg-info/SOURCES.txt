@@ -3,6 +3,7 @@ pyproject.toml
 src/fieldmusic.egg-info/PKG-INFO
 src/fieldmusic.egg-info/SOURCES.txt
 src/fieldmusic.egg-info/dependency_links.txt
+src/fieldmusic.egg-info/requires.txt
 src/fieldmusic.egg-info/top_level.txt
 src/grains/__init__.py
 src/grains/algorithms.py
@@ -11,6 +12,5 @@ src/grains/evaluation.py
 src/grains/evaluation_narrow.py
 src/grains/helpers.py
 src/grains/slicing.py
-src/grains/test.py
 src/grains/trials.py
 src/grains/writing.py

@@ -1,3 +1,14 @@
 Metadata-Version: 2.4
 Name: fieldmusic
 Version: 0.0.1
+Requires-Python: >=3.10
+Requires-Dist: audioflux==0.1.9
+Requires-Dist: ftis==2.1.1
+Requires-Dist: munkres==1.1.4
+Requires-Dist: pyarrow==23.0.1
+Requires-Dist: PyTimbre==1.0.2.3
+Requires-Dist: scikit-posthocs==0.14.0
+Requires-Dist: sounddevice==0.5.5
+Requires-Dist: weasyprint==68.1
+Requires-Dist: DateTime==6.0
+Requires-Dist: unicodedata2==17.0.1

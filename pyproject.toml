@@ -5,3 +5,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fieldmusic"
 version = "0.0.1"
+requires-python = ">=3.10"
+dependencies = [
+    "audioflux==0.1.9",
+    "ftis==2.1.1",
+    "munkres==1.1.4",
+    "pyarrow==23.0.1",
+    "PyTimbre==1.0.2.3",
+    "scikit-posthocs==0.14.0",
+    "sounddevice==0.5.5",
+    "weasyprint==68.1",
+    "DateTime==6.0",
+    "unicodedata2==17.0.1"
+]
