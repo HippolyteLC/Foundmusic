@@ -35,7 +35,16 @@ Run the evaluation_narrow file. Specific pilot_study directory must first be sel
 python evaluation_narrow.py
 ```
 
-## Output
+## Run Simple HTML Audio Demo's
+
+```bash
+cd src/frontend
+python -m http.server
+```
+go to a browser and navigate to http://localhost:8000/
+
+
+# Output
 - Input analysis figures
 - Output analysis figures
 - Statistical results
