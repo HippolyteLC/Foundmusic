@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Gallery</title>
+    <style>
+        body { font-family: sans-serif; max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 300px);
+            gap: 2rem;
+            margin-bottom: 3rem;
+            justify-content: start; 
+        }
+
+        .audio-item { border: 1px solid #eee; padding: 1rem; border-radius: 8px; width: 300px; }
+        img { display: block; width: 100%; height: auto; margin-bottom: 1rem; }
+        audio { width: 100%; }
+    </style>
+</head>
+<body>
+
+    <h2>Found Sound Input</h2>
+    <div class="gallery">
+        <div class="audio-item">
+            <p>Metro Amsterdam</p>
+            <img src="images/waveform_metro_foundsound.png" alt="Waveform">
+            <audio controls src="audio/input.wav"></audio>
+        </div>
+    </div>
+
+    <h2>Grain Examples</h2>
+    <div class="gallery">
+        <div class="audio-item">
+            <p>2 ms Grain</p>
+            <img src="images/waveform_plot_grain_2ms.png" alt="Waveform">
+            <audio controls src="audio/grain_2ms.wav"></audio>
+        </div>
+        <div class="audio-item">
+            <p>40 ms Grain</p>
+            <img src="images/waveform_plot_grain_40ms.png" alt="Waveform">
+            <audio controls src="audio/grain_40ms.wav"></audio>
+        </div>
+        <div class="audio-item">
+            <p>100 ms Grain</p>
+            <img src="images/waveform_plot_grain_100ms.png" alt="Waveform">
+            <audio controls src="audio/grain_100ms.wav"></audio>
+        </div>
+    </div>
+
+    <h2>Output Examples</h2>
+    <div class="gallery">
+        <div class="audio-item">
+            <img src="images/waveform_metro_foundsound_output_20260611_1c7b2e.png" alt="Waveform">
+            <audio controls src="audio/20260611_1c7b2e.wav"></audio>
+        </div>
+        <div class="audio-item">
+            <img src="images/waveform_metro_foundsound_output_20260611_11a384.png" alt="Waveform">
+            <audio controls src="audio/20260611_11a384.mp3"></audio>
+        </div>
+        <div class="audio-item">
+            <img src="images/waveform_metro_foundsound_output_20260611_c9967b.png" alt="Waveform">
+            <audio controls src="audio/20260611_c9967b.wav"></audio>
+        </div>
+    </div>
+
+</body>
+</html>
