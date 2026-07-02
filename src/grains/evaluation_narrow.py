@@ -21,11 +21,13 @@ from sklearn.preprocessing import normalize
 # This is done to keep the iid property for statistical testing of variety of outputs
 
 # Some booleans to determine which plots/ statistics are produced.
-do_UMAP_scatterplot = False
+do_UMAP_scatterplot = True
 do_boxplot = False
 do_violin_plot_sns = False
-do_violin_plot_plt = True
+do_violin_plot_plt = False
 do_cosine_distance_comp = False if not (do_violin_plot_sns or do_violin_plot_plt) else True
+do_output_distributions = False
+
 
 STUDY_NAME = "pilot_study_3"
 # if not os.path.exists(f"..\\..\\corpus\\{STUDY_NAME}\\"):
@@ -192,18 +194,20 @@ if do_cosine_distance_comp:
 labels = ['Markov \nGroup', 'State \nGroup', 'GS \nGroup', 'Baseline Group \n(Fully Randomized)']
 metrics_labels = list(df_scaled_trials_aggregated.columns)
 
-get_histograms(FIGURES_DIR, "markov_outputs_histograms.pdf",df_scaled_trials_aggregated[:200], metrics_labels)
-get_histograms(FIGURES_DIR, "state_outputs_histograms.pdf", df_scaled_trials_aggregated[200:400], metrics_labels)
-get_histograms(FIGURES_DIR, "gs_outputs_histograms.pdf", df_scaled_trials_aggregated[400:600], metrics_labels)
-# get_histograms(FIGURES_DIR, "all_random_outputs_histograms_.png", df_scaled_trials_aggregated[:600], metrics_labels)
 all_scaled_metrics_dfs = [
     df_scaled_trials_aggregated[:200], 
     df_scaled_trials_aggregated[200:400], 
     df_scaled_trials_aggregated[400:600]
 ]
+if do_output_distributions:
+    get_histograms(FIGURES_DIR, "markov_outputs_histograms.pdf",df_scaled_trials_aggregated[:200], metrics_labels)
+    get_histograms(FIGURES_DIR, "state_outputs_histograms.pdf", df_scaled_trials_aggregated[200:400], metrics_labels)
+    get_histograms(FIGURES_DIR, "gs_outputs_histograms.pdf", df_scaled_trials_aggregated[400:600], metrics_labels)
+    # get_histograms(FIGURES_DIR, "all_random_outputs_histograms_.png", df_scaled_trials_aggregated[:600], metrics_labels)
 
-get_density_trellis(FIGURES_DIR, "KDE_plots_output_distributions.pdf", all_scaled_metrics_dfs,
-                    labels[:3],metrics_labels)
+
+    get_density_trellis(FIGURES_DIR, "KDE_plots_output_distributions.pdf", all_scaled_metrics_dfs,
+                        labels[:3],metrics_labels)
 
 ###_____________________________________________________________________________###
 ###_____________________________________________________________________________###
@@ -359,10 +363,10 @@ if do_UMAP_scatterplot == True:
     })
 
     custom_colors = {
-        'Markov Group': "#1f81d0",             
-        'State Group': "#d89e20",    
-        'GS Group': "#24de13", 
-        'Baseline Group': "#89b0e6"            
+        'Markov Group': "#56B4E9",             
+        'State Group': "#d55e00",    
+        'GS Group': "#009E73", 
+        'Baseline Group': "#F0E442"            
     }
 
     plt.figure(figsize=(10, 8))

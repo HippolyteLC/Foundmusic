@@ -29,9 +29,9 @@ METADATA_PATH = f"..\..\corpus\{STUDY_NAME}\metadata\grain_{GRAIN_DURATION}_s_me
 
 # Set the seeds
 N_CONFIGS_PER_PARAMGROUP = 200
-N_PARAM_GROUPS = 3
+_N_PARAM_GROUPS = 3
 N_CONFIGS_ALL_RAND = 400
-N_CONFIGURATIONS = (N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS) + N_CONFIGS_ALL_RAND
+N_CONFIGURATIONS = (N_CONFIGS_PER_PARAMGROUP * _N_PARAM_GROUPS) + N_CONFIGS_ALL_RAND
 K_REPETITIONS = 5
 
 MASTER_SEED = 42
@@ -217,7 +217,7 @@ if not os.path.exists(input_grain_analysis_plot):
 
 # last_n_clusters = None
 # # all_trials = []
-# for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS):
+# for trial in range(N_CONFIGS_PER_PARAMGROUP * _N_PARAM_GROUPS * K_REPETITIONS):
 #     config_seed = trials[trial]["config_seed"]
 #     config_id = trials[trial]["config_id"]
 #     repetition_id = trials[trial]["rep_id"]
@@ -313,7 +313,7 @@ if not os.path.exists(input_grain_analysis_plot):
 
 # print(f"starting trials Trial 4 (All parametres unfrozen)")
 
-# for trial in range(N_CONFIGS_PER_PARAMGROUP * N_PARAM_GROUPS * K_REPETITIONS, N_CONFIGURATIONS * K_REPETITIONS):
+# for trial in range(N_CONFIGS_PER_PARAMGROUP * _N_PARAM_GROUPS * K_REPETITIONS, N_CONFIGURATIONS * K_REPETITIONS):
 #     config_seed = trials[trial]["config_seed"]
 #     config_id = trials[trial]["config_id"]
 #     repetition_id = trials[trial]["rep_id"]
