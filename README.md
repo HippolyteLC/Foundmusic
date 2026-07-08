@@ -23,6 +23,13 @@ python trials.py
 
 **NOTE:** variables marked with ```_variable_name``` underscore should not be modified without knowledge of the function parameters. 
 
+### Output
+- Input analysis figures
+- Output analysis figures
+- Statistical results
+- Trial logs
+- Trial parameters
+
 ## Run Evaluations
 
 ```bash
@@ -43,33 +50,35 @@ python -m http.server
 ```
 go to a browser and navigate to http://localhost:8000/
 
-## Modules
+# 3. Content
 
-### Algorithms
+### Modules (in src/grains)
+
+#### Algorithms
 Contains the canonical algorithms used in this research 
 The ```MarkovGranulizer``` class supports currently ```run_v3```
 used in the ```trials.py``` script. 
 
-### Analysis 
+#### Analysis 
 - Contains the AnalyzerObject class that allows for analysis of input audio, 
 grain descriptor computation, data scaling
 - Contains visualization functions used in ```evaluation_narrow.py```
 
-### Helpers
+#### Helpers
 - Contains the helper functions such as amplitude envelopes and the audio array normalization
 
-### Slicing
+#### Slicing
 - Contains wrappers for the FluCoMa CLI toolkit, not used in the trials
 
-### Writing
+#### Writing
 - Contains hashing and saving of audio + metadata
 
-### Trials
+#### Trials
 - Contains script to produce N total samples for K random seeds per configuration
 - It is designed for specific trial setup where Markov/ State/ and GS groups are considered
 - Saves the trial parameters, the parameter configuration values, the output data (audio + metadata), the output metric data
 
-### Evaluation + Evaluation Narrow
+#### Evaluation + Evaluation Narrow
 - Evaluation is the first iteration and attempt at running visual + statistical analysis
 - Evaluation narrow is the current used method
     - Contains stat testing with Kruskal Wallis, Posthoc Dunns
@@ -77,7 +86,7 @@ grain descriptor computation, data scaling
     - Contains visual analysis of output cosine distances via BOX / VIOLIN plots
     - Contains UMAP visualization of outputs (2-component)
 
-## Notebooks
+### Notebooks
 There are several notebooks which were used to:
 - develop methods functions classes
 - iterate through algorithms and parameters
@@ -86,18 +95,14 @@ There are several notebooks which were used to:
 
 Further details per notebook are included in **docs/notebook_logs.md**
 
-# Output
-- Input analysis figures
-- Output analysis figures
-- Statistical results
-- Trial logs
-- Trial parameters
 
+## docs
+- Contains documentation on thesis project and images used in the thesis/ poster
 
+## corpus
+- Contains all the input output data (from trials and from experimentations)
 
-
-
-
-
+## audio_demo
+- Contains some audio used in demonstrations (TBD: could be removed and files moved)
 
 
