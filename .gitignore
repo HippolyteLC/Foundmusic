@@ -1,17 +1,8 @@
-*.wav
+# ignore all audio files (for space)
 /corpus/*/*.wav
 /corpus/*/output/*.wav
 /corpus/*/*.mp3
 /corpus/*/output/*.mp3
-/audio_demo/*.wav
-/audio_demo/*.mp3
-/docs/*.pdf
-/docs/*/*.pdf
-/docs/*/*.pptx
-/docs/*.pptx
-/docs/pdfs
-/docs/images/*.pptx
-/docs/references
 /corpus/case_study_Airbus_A300B4-622R(F)
 /corpus/pilot_trial_1/
 /corpus/*/*/*.wav
@@ -20,13 +11,27 @@
 /corpus/*/*/*/*.m4a
 /corpus/*/*/*.mp3
 /corpus/*/*/*/*.mp3
-/src/grains/test.py
+
+# ignore all audio files
+/audio_demo/*.wav
+/audio_demo/*.mp3
+/audio_demo/thesis_audio
+
+# ignore frozen reqs (acquired with treeparsing)
+requirements_frozen.txt
+
+# ignore pdfs of thesis and pptx files
+/docs/images/
+/docs/*/*/*.pptx
+/docs/*/*.pptx
+/docs/*.pptx
+/docs/pdfs
+/docs/references
+
+
+# ignore all wav files
+*.wav
 /*/*.wav
 /*/*/*.wav
 /*/*/*/*.wav
 /*/*/*/*/*.wav
-requirements_frozen.txt
-/docs/images/poster_presentation_final_1
-/audio_demo/thesis_audio
-docs/images/bachelor_project_poster_1/
-docs/*.pptx
