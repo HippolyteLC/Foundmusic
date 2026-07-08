@@ -77,6 +77,15 @@ grain descriptor computation, data scaling
     - Contains visual analysis of output cosine distances via BOX / VIOLIN plots
     - Contains UMAP visualization of outputs (2-component)
 
+## Notebooks
+There are several notebooks which were used to:
+- develop methods functions classes
+- iterate through algorithms and parameters
+- experiment with sound input and output
+- test analysis methods
+
+Further details per notebook are included in **docs/notebook_logs.md**
+
 # Output
 - Input analysis figures
 - Output analysis figures
