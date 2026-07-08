@@ -1,16 +1,14 @@
 import json
 from sklearn.preprocessing import RobustScaler, PowerTransformer, StandardScaler, Normalizer
-from sklearn.decomposition import PCA
 import pandas as pd
 from scipy.spatial.distance import cosine
 import scipy.stats as stats
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors  
 import seaborn as sns
 import os
 import umap
-from grains.analysis import get_histograms, get_scatter_plt, get_spectrogram, get_density_trellis
+from grains.analysis import get_histograms, get_spectrogram, get_density_trellis
 from scikit_posthocs import posthoc_dunn
 import audioflux as af
 from sklearn.preprocessing import normalize
@@ -75,6 +73,12 @@ with open(TRIAL_LOGS_PATH, "r") as f:
             all_trials.append(dic)
 
 def aggregate_metrics_per_config(arr, k_rep=K_REP):
+    """
+    Aggregate metrics per unique config by taking the mean of K repetitions.
+    Group trials by their config ID. 
+    Parameters: arr, k_rep: the trial array containing all trials (e.g. config 1 rep 2, config 1, rep 3, ..., config n rep k_rep)
+    k_rep is the number of repetitions per configuration
+    """
     trial_aggr = []
     metrics_keys = list(arr[0]["metrics"].keys())
     len_metrics = len(metrics_keys)
@@ -148,6 +152,10 @@ def trial_to_scaled_metric_df(list_trials, scaler=1):
     return metrics_df, scaled_metrics_df, scaled_metrics
 
 def compute_cosine_matrix(df):
+    """
+    computes cosine metric on all output samples
+    parameters: df - dataframe of scaled metrics
+    """
     cosine_matrix = []
     data = np.array(df)
     n_samples = data.shape[0]
@@ -161,6 +169,10 @@ def compute_cosine_matrix(df):
     return cosine_matrix
 
 def flatten_upper_half(matrix):
+    """
+    flattenes cosine dist matrix to 1D array of pairwise distances.
+    parameters: matrix - 2D array of pairwise distances
+    """
     flat_cosine_distances = matrix[np.triu_indices(matrix.shape[0], k = 1)]
     expected_length = int((matrix.shape[-1] * (matrix.shape[-1] - 1)) / 2)
     actual_length = len(flat_cosine_distances)
@@ -168,6 +180,10 @@ def flatten_upper_half(matrix):
     return flat_cosine_distances
 
 def compute_stats(arr):
+    """
+    computes statistics for an array of values.
+    parameters: arr - 1D array of values
+    """
     mean_diversity = np.mean(arr)
     std_diversity  = np.std(arr)
     max_diversity  = np.max(arr)
@@ -214,17 +230,31 @@ if do_output_distributions:
 ### Get results from cosine_dist metrics (ANOVA + Levine)
 
 def format_p_value(p):
+    """ 
+    helper func for printing p val"""
     return f"{p:.4e}" if p < 0.001 else f"{p:.4f}"
 
 def compute_kruskal_wallis_one_way(dfs, metric):
+    """ 
+    compute kruskal wallis one way test for all param group dfs
+    parameters: dfs - list of dataframes for each param group, metric - the metric to test
+    """
     H_statistic, p_value = stats.kruskal(dfs[0][metric], dfs[1][metric], dfs[2][metric])
     return H_statistic, p_value
 
 def output_kruskal_wallis_results(dfs, metric):
+    """
+    helper func to print results of kruskal wallis test for a given metric
+    parameters: dfs - list of dataframes for each param group, metric - the metric to test
+    """
     H_statistic, p_value = compute_kruskal_wallis_one_way(dfs, metric)
     return {"H_stat": H_statistic, "p_val": p_value}
 
 def compute_posthoc_dunns(dfs, metric):
+    """
+    compute posthoc dunn test for all param group dfs
+    parameters: dfs - list of dataframes for each param group, metric - the metric to test
+    """
     data = [dfs[0][metric], dfs[1][metric], dfs[2][metric]]
     p_vals = posthoc_dunn(data, p_adjust="holm")
     return p_vals
