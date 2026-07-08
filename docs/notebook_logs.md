@@ -50,3 +50,15 @@ Work to be done still on the tpm distributions, as these are currently either ma
 
 <!-- TODO: do a case study of the two guitar input samples and compare input and output similarities.  -->
 <!-- TODO: add grain scatterplot saving for the different inputs. Compare differences between plots of different inputs. -->
+
+### notebooks\008_comparative_study.ipynb
+two small case studies for in meeting demo
+1. of the metro
+2. of a whistling sample
+
+### notebooks\009_grain_analysis.ipynb
+1. making helpers
+2. testing scaler and grain analysis
+
+### notebooks\010_poster_visualizations.ipynb
+1. making poster visuals + thesis visuals (grains, waveforms, STFTs, envelopes)
